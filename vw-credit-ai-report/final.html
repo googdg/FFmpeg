@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>大众汽车金融 - AI信审报告系统</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', sans-serif; background: #f5f5f5; color: #333; }
+        .toolbar { position: fixed; top: 0; left: 0; right: 0; height: 60px; background: #001e50; color: white; display: flex; justify-content: space-between; align-items: center; padding: 0 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); z-index: 1000; }
+        .toolbar h1 { font-size: 18px; font-weight: 600; }
+        .toolbar-right { display: flex; gap: 16px; align-items: center; }
+        .case-selector { padding: 8px 16px; border: 1px solid rgba(255,255,255,0.3); border-radius: 4px; background: rgba(255,255,255,0.1); color: white; font-size: 14px; cursor: pointer; }
+        .btn { padding: 8px 20px; border: none; border-radius: 4px; font-size: 14px; cursor: pointer; background: #00b0f0; color: white; }
+        .btn:hover { background: #0099d6; }
+        .report-container { max-width: 1200px; margin: 80px auto 40px; background: white; box-shadow: 0 2px 16px rgba(0,0,0,0.1); padding: 32px; }
+        .report-header { display: flex; justify-content: space-between; padding-bottom: 24px; border-bottom: 3px solid #001e50; margin-bottom: 32px; }
+        .header-title h2 { font-size: 24px; color: #001e50; margin-bottom: 8px; }
+        .report-section { margin-bottom: 32px; padding: 24px; border: 1px solid #e0e0e0; border-radius: 8px; }
+        .section-title { font-size: 18px; font-weight: 600; color: #001e50; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+        .overview-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+        .overview-item { display: flex; gap: 8px; }
+        .overview-item label { font-weight: 500; color: #666; min-width: 80px; }
+        .risk-score { width: 200px; height: 200px; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 24px auto; color: white; box-shadow: 0 8px 16px rgba(0,0,0,0.2); transition: all 0.3s; }
+        .risk-score.level-a { background: linear-gradient(135deg, #00c853, #00e676); }
+        .risk-score.level-b { background: linear-gradient(135deg, #2196f3, #64b5f6); }
+        .risk-score.level-c { background: linear-gradient(135deg, #ffc107, #ffeb3b); color: #333; }
+        .score-value { font-size: 48px; font-weight: bold; }
+        .score-label { font-size: 14px; margin-top: 8px; }
+        .risk-level { font-size: 18px; font-weight: 600; margin-top: 8px; padding: 4px 16px; background: rgba(255,255,255,0.2); border-radius: 20px; }
+        .rag-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+        .rag-item { padding: 16px; background: #f5f5f5; border-radius: 8px; }
+        .rag-item strong { display: block; color: #001e50; margin-bottom: 8px; }
+        .recommendations-list { display: flex; flex-direction: column; gap: 16px; }
+        .recommendation-item { display: flex; gap: 16px; padding: 16px; background: #f5f5f5; border-left: 4px solid #ff9800; border-radius: 4px; }
+        .recommendation-number { width: 32px; height: 32px; background: #001e50; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0; }
+        .highlight { color: #0066cc; font-weight: 600; font-size: 16px; }
+        .decision-box { padding: 16px; border-radius: 8px; border-left: 4px solid; }
+        .decision-approve { background: #e8f5e9; border-left-color: #00c853; }
+        .decision-conditional { background: #fff3e0; border-left-color: #ffc107; }
+    </style>
+</head>
+<body>
+    <div class="toolbar">
+        <h1>🚗 大众汽车金融 - AI信审报告系统</h1>
+        <div class="toolbar-right">
+            <select class="case-selector" onchange="switchCase(this.value)">
+                <option value="case1">案例1 - 优质客户(A级) 评分850</option>
+                <option value="case2" selected>案例2 - 良好客户(B级) 评分720</option>
+                <option value="case3">案例3 - 一般客户(C级) 评分580</option>
+                <option value="case4">案例4 - 关注客户(D级) 评分420</option>
+                <option value="case5">案例5 - 拒绝客户(E级) 评分280</option>
+            </select>
+            <button class="btn" onclick="window.print()">🖨️ 打印</button>
+            <button class="btn" onclick="exportToPDF()" id="exportBtn">📄 导出PDF</button>
+        </div>
+    </div>
+
+    <div class="report-container">
+        <div class="report-header">
+            <div class="header-title">
+                <h2>大众汽车金融</h2>
+                <p>AI智能信审报告</p>
+            </div>
+            <div>
+                <p><strong>报告日期：</strong>2024-11-12</p>
+                <p><strong>报告编号：</strong><span id="reportNum">CA20241112002</span></p>
+            </div>
+        </div>
+
+        <div class="report-section">
+            <h3 class="section-title">👤 客户概览</h3>
+            <div class="overview-grid">
+                <div class="overview-item"><label>姓名：</label><span id="name">李**</span></div>
+                <div class="overview-item"><label>性别：</label><span id="gender">女</span></div>
+                <div class="overview-item"><label>年龄：</label><span id="age">32岁</span></div>
+                <div class="overview-item"><label>申请产品：</label><span id="product">新车贷款</span></div>
+                <div class="overview-item"><label>申请金额：</label><span class="highlight" id="amount">¥250,000</span></div>
+                <div class="overview-item"><label>贷款期限：</label><span id="term">36期</span></div>
+            </div>
+        </div>
+
+        <div class="report-section">
+            <h3 class="section-title">⚠️ 风险评估</h3>
+            <div class="risk-score level-b" id="riskScore">
+                <div class="score-value" id="score">720</div>
+                <div class="score-label">综合评分</div>
+                <div class="risk-level" id="level">良好客户</div>
+            </div>
+            <p style="text-align: center; color: #666;" id="indicators">
+                DSR: 42% | LTV: 75% | 月收入: ¥22,000 | 征信分: 690 | 逾期: 0次
+            </p>
+        </div>
+
+        <div class="report-section">
+            <h3 class="section-title">🤖 AI智能信息汇总 <span style="font-size: 11px; background: #00b0f0; color: white; padding: 2px 8px; border-radius: 12px; font-weight: normal;">RAG技术</span></h3>
+            <div class="rag-grid">
+                <div class="rag-item"><strong>📊 财报摘要：</strong><p id="ragFinancial">企业经营稳定，营收略有波动但整体向好</p></div>
+                <div class="rag-item"><strong>🔍 第三方数据：</strong><p id="ragThirdParty">征信记录良好，无逾期</p></div>
+                <div class="rag-item"><strong>📰 舆情监测：</strong><p id="ragSentiment">未发现重大负面信息</p></div>
+            </div>
+        </div>
+
+        <div class="report-section">
+            <h3 class="section-title">🎯 AI建议审核方向</h3>
+            <div class="recommendations-list" id="recommendations"></div>
+        </div>
+
+        <div class="report-section">
+            <h3 class="section-title">✅ 审批建议</h3>
+            <div class="decision-box decision-conditional" id="decisionBox">
+                <p style="font-size: 18px; font-weight: 600; margin-bottom: 16px;">
+                    建议决策：<span id="decision">⚠️ 有条件批准</span>
+                </p>
+                <p id="loanRange"><strong>建议额度：</strong>¥200,000 - ¥250,000</p>
+                <p id="rateRange"><strong>建议利率：</strong>4.5% - 5.5%</p>
+                <p id="defaultRate"><strong>预期违约率：</strong>1.8%</p>
+                <div id="conditions"></div>
+            </div>
+        </div>
+
+        <div class="report-section" id="riskAlertsSection">
+            <h3 class="section-title">⚠️ 风险警示</h3>
+            <div id="riskAlerts"></div>
+        </div>
+
+        <div class="report-section">
+            <h3 class="section-title">💬 AI辅助提问 <span style="font-size: 13px; color: #666; font-weight: normal;" id="questionCount">(5个建议问题)</span></h3>
+            <div style="padding: 16px; background: #e8f5e9; border-radius: 8px;" id="questions"></div>
+        </div>
+
+        <div class="report-section">
+            <h3 class="section-title">📋 决策依据</h3>
+            <p><strong>数据来源：</strong>CRM系统、人行征信、社保公积金、银行流水</p>
+            <p><strong>模型版本：</strong>v2.1.0</p>
+            <p><strong>AI置信度：</strong>85%</p>
+            <div style="margin-top: 16px; padding: 12px; background: #fff9c4; border-radius: 4px;">
+                <p style="font-size: 13px;">⚠️ <strong>免责声明：</strong>本报告由AI系统自动生成，仅供参考。最终信审决策需由专业信审员基于完整信息进行人工复核和判断。</p>
+            </div>
+        </div>
+
+        <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #e0e0e0; text-align: center; color: #999; font-size: 12px;">
+            <p>© 2024 大众汽车金融服务有限公司 | AI信审报告系统 v1.0</p>
+        </div>
+    </div>
+
+    <style>
+        .risk-score.level-d { background: linear-gradient(135deg, #ff9800, #ffb74d); color: white; }
+        .risk-score.level-e { background: linear-gradient(135deg, #f44336, #e57373); color: white; }
+        .decision-reject { background: #ffebee; border-left-color: #f44336; }
+        .alert-high { padding: 12px; background: #ffebee; border-left: 4px solid #f44336; margin-bottom: 8px; border-radius: 4px; }
+        .alert-medium { padding: 12px; background: #fff3e0; border-left: 4px solid #ff9800; margin-bottom: 8px; border-radius: 4px; }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script>
+        const cases = {
+            case1: { 
+                name: '张**', gender: '男', age: 35, product: '新车贷款', amount: '300,000', term: 36, vehicle: '大众途观L 2024款',
+                reportNum: 'CA20241112001', score: 850, level: '优质客户', levelClass: 'level-a', 
+                dsr: 28, ltv: 65, income: '35,000', creditScore: 780, overdue: 0, 
+                ragFinancial: '企业营收稳定增长，近三年年均增长率15%，现金流充裕，资产负债率健康', 
+                ragThirdParty: '征信记录优秀，无逾期记录，社保公积金连续缴纳60个月，收入稳定可靠', 
+                ragSentiment: '未发现负面新闻，所在行业发展稳定，企业信誉良好，无司法诉讼记录', 
+                recommendations: ['客户资质优秀，建议快速审批通过，可作为优质客户重点维护', '收入稳定且负债率低，建议提供优惠利率以增强客户粘性', '可推荐其他金融产品，如信用卡、理财等增值服务'], 
+                decision: '✅ 批准', decisionClass: 'decision-approve', 
+                loanRange: '¥300,000 - ¥350,000', rateRange: '3.5% - 4.0%', defaultRate: '0.3%', 
+                conditions: [], 
+                questions: ['请问您选择这款车型的主要考虑因素是什么？', '您计划使用哪个账户进行月供还款？', '是否需要了解我们的车辆保险和延保服务？'],
+                alerts: { high: [], medium: [], low: ['建议定期跟进客户还款情况', '可推荐增值服务提升客户价值'] }
+            },
+            case2: { 
+                name: '李**', gender: '女', age: 32, product: '新车贷款', amount: '250,000', term: 36, vehicle: '大众帕萨特 2024款',
+                reportNum: 'CA20241112002', score: 720, level: '良好客户', levelClass: 'level-b', 
+                dsr: 42, ltv: 75, income: '22,000', creditScore: 690, overdue: 0, 
+                ragFinancial: '企业经营稳定，营收略有波动但整体向好，现金流基本满足需求', 
+                ragThirdParty: '征信记录良好，无逾期，社保公积金连续缴纳36个月，收入来源稳定', 
+                ragSentiment: '未发现重大负面信息，行业发展平稳，企业运营正常', 
+                recommendations: ['负债率偏高(42%)，需重点核实其他贷款的真实情况和月供金额', '工作年限较短(3年)，建议评估收入稳定性和职业发展前景', '首次购车，需了解购车用途和详细的还款计划'], 
+                decision: '⚠️ 有条件批准', decisionClass: 'decision-conditional', 
+                loanRange: '¥200,000 - ¥250,000', rateRange: '4.5% - 5.5%', defaultRate: '1.8%', 
+                conditions: ['建议降低贷款金额至20万元，以降低月供压力', '需提供额外的收入证明或资产证明', '建议增加首付比例至40%以上'], 
+                questions: ['您目前名下其他贷款的月供总额是多少？', '您的收入来源是否稳定？是否有其他收入来源？', '除了工资收入，您是否有其他资产或收入可以用于还款？', '请说明您的购车用途和还款计划？', '您目前的工作是否稳定？未来是否有晋升或加薪计划？'],
+                alerts: { high: [], medium: ['负债率偏高，需关注还款能力', '工作年限较短，收入稳定性需进一步确认'], low: ['征信记录良好，无逾期历史', '社保公积金正常缴纳'] }
+            },
+            case3: { 
+                name: '王**', gender: '男', age: 28, product: '二手车贷款', amount: '150,000', term: 24, vehicle: '大众迈腾 2021款',
+                reportNum: 'CA20241112003', score: 580, level: '一般客户', levelClass: 'level-c', 
+                dsr: 55, ltv: 85, income: '15,000', creditScore: 620, overdue: 2, 
+                ragFinancial: '收入水平一般，存在一定波动，储蓄较少，抗风险能力有限', 
+                ragThirdParty: '征信记录一般，存在2次逾期记录(已结清)，社保缴纳18个月', 
+                ragSentiment: '未发现重大负面信息，但所在行业竞争激烈，就业稳定性一般', 
+                recommendations: ['负债率过高(55%)，严重超标，需详细核实所有负债情况', '存在逾期记录，需了解逾期原因和当前还款能力改善情况', 'LTV比例过高(85%)，建议要求增加首付或降低贷款金额', '工作稳定性较差，需评估职业前景和收入增长潜力'], 
+                decision: '⚠️ 有条件批准', decisionClass: 'decision-conditional', 
+                loanRange: '¥100,000 - ¥120,000', rateRange: '6.0% - 7.5%', defaultRate: '4.2%', 
+                conditions: ['必须降低贷款金额至12万元以下', '必须提供有效担保人或抵押物', '需要提供额外的收入证明和资产证明', '建议缩短贷款期限至18个月', '需要主管级别审批'], 
+                questions: ['请详细说明您之前两次逾期的具体原因？', '请列出您目前所有的贷款和信用卡负债明细？', '您目前的月收入是否足以覆盖所有月供？', '您是否有房产、存款或其他资产可以作为还款保障？', '是否可以提供有稳定收入的担保人？'],
+                alerts: { high: ['负债率严重超标(55%)，远超安全线', '存在逾期记录，信用风险较高'], medium: ['LTV比例过高，车辆贬值风险大', '工作年限短，收入稳定性存疑', '储蓄不足，抗风险能力弱'], low: [] }
+            },
+            case4: { 
+                name: '赵**', gender: '男', age: 45, product: '新车贷款', amount: '400,000', term: 48, vehicle: '大众途锐 2024款',
+                reportNum: 'CA20241112004', score: 420, level: '关注客户', levelClass: 'level-d', 
+                dsr: 68, ltv: 90, income: '18,000', creditScore: 550, overdue: 5, 
+                ragFinancial: '收入不稳定，存在明显下降趋势，负债沉重，现金流紧张', 
+                ragThirdParty: '征信记录较差，多次逾期(5次)，部分逾期未结清，社保断缴', 
+                ragSentiment: '发现多条负面信息，涉及民事诉讼，所在企业经营困难', 
+                recommendations: ['多次逾期且部分未结清，信用风险极高，强烈建议拒绝', '负债率严重超标(68%)，已无还款能力，违约风险极大', '存在民事诉讼，法律风险高，可能影响还款', '申请金额与收入严重不匹配，存在欺诈嫌疑', '社保断缴，就业状况不明，收入来源存疑'], 
+                decision: '❌ 拒绝', decisionClass: 'decision-reject', 
+                loanRange: '不建议放贷', rateRange: 'N/A', defaultRate: '8.5%', 
+                conditions: ['建议拒绝本次申请', '如客户坚持申请，需提供充足抵押物', '需要企业法人或高净值人士担保', '必须先结清所有逾期款项'], 
+                questions: ['请说明您目前未结清的逾期贷款情况？', '请说明您目前涉及的民事诉讼详情？', '您目前的真实收入来源是什么？为何社保断缴？', '以您目前的收入状况，为何要购买如此高价的车辆？'],
+                alerts: { high: ['多次逾期且部分未结清，违约风险极高', '负债率68%，严重超标，无还款能力', '存在民事诉讼，法律风险高', '社保断缴，就业状况不明', '申请金额与收入严重不匹配'], medium: ['LTV比例过高(90%)，抵押物不足', '年龄偏大，还款期限过长'], low: [] }
+            },
+            case5: { 
+                name: '刘**', gender: '女', age: 38, product: '新车贷款', amount: '350,000', term: 36, vehicle: '大众途昂 2024款',
+                reportNum: 'CA20241112005', score: 280, level: '拒绝客户', levelClass: 'level-e', 
+                dsr: 85, ltv: 95, income: '12,000', creditScore: 480, overdue: 12, 
+                ragFinancial: '收入极低且不稳定，负债累累，已资不抵债，现金流断裂', 
+                ragThirdParty: '征信记录极差，长期多次逾期(12次)，多笔贷款逾期未还，被列入失信名单', 
+                ragSentiment: '发现大量负面信息，涉及多起诉讼和强制执行，企业已破产清算', 
+                recommendations: ['⚠️ 客户已被列入失信名单，严禁放贷，立即拒绝', '⚠️ 负债率85%，已完全丧失还款能力，违约概率接近100%', '⚠️ 涉及多起诉讼和强制执行，存在严重法律风险', '⚠️ 疑似欺诈行为，申请金额与实际能力严重不符', '⚠️ 建议将客户列入黑名单，永久拒绝业务往来'], 
+                decision: '❌ 立即拒绝', decisionClass: 'decision-reject', 
+                loanRange: '严禁放贷', rateRange: 'N/A', defaultRate: '15.8%', 
+                conditions: ['立即拒绝申请', '将客户列入黑名单', '上报风控部门进行欺诈调查', '通知相关部门注意防范'], 
+                questions: [],
+                alerts: { high: ['⚠️ 客户已被列入失信名单，严禁放贷', '⚠️ 负债率85%，完全丧失还款能力', '⚠️ 长期多次逾期，信用极差', '⚠️ 涉及多起诉讼和强制执行', '⚠️ 疑似欺诈行为，需上报调查', '⚠️ 申请金额与收入严重不匹配', '⚠️ 所在企业已破产清算'], medium: [], low: [] }
+            }
+        };
+
+        function switchCase(caseId) {
+            const d = cases[caseId];
+            document.getElementById('reportNum').textContent = d.reportNum;
+            document.getElementById('name').textContent = d.name;
+            document.getElementById('gender').textContent = d.gender;
+            document.getElementById('age').textContent = d.age + '岁';
+            document.getElementById('product').textContent = d.product;
+            document.getElementById('amount').textContent = '¥' + d.amount;
+            document.getElementById('term').textContent = d.term + '期';
+            
+            const riskScore = document.getElementById('riskScore');
+            riskScore.className = 'risk-score ' + d.levelClass;
+            document.getElementById('score').textContent = d.score;
+            document.getElementById('level').textContent = d.level;
+            document.getElementById('indicators').textContent = `DSR: ${d.dsr}% | LTV: ${d.ltv}% | 月收入: ¥${d.income} | 征信分: ${d.creditScore} | 逾期: ${d.overdue}次`;
+            
+            document.getElementById('ragFinancial').textContent = d.ragFinancial;
+            document.getElementById('ragThirdParty').textContent = d.ragThirdParty;
+            document.getElementById('ragSentiment').textContent = d.ragSentiment;
+            
+            document.getElementById('recommendations').innerHTML = d.recommendations.map((r, i) => 
+                `<div class="recommendation-item"><div class="recommendation-number">${i+1}</div><div><p>${r}</p></div></div>`
+            ).join('');
+            
+            const decisionBox = document.getElementById('decisionBox');
+            decisionBox.className = 'decision-box ' + d.decisionClass;
+            document.getElementById('decision').textContent = d.decision;
+            document.getElementById('loanRange').innerHTML = `<strong>建议额度：</strong>${d.loanRange}`;
+            document.getElementById('rateRange').innerHTML = `<strong>建议利率：</strong>${d.rateRange}`;
+            document.getElementById('defaultRate').innerHTML = `<strong>预期违约率：</strong>${d.defaultRate}`;
+            
+            document.getElementById('conditions').innerHTML = d.conditions.length > 0 ? 
+                `<p style="margin-top: 16px;"><strong>附加条件：</strong></p><ul style="margin-left: 20px; margin-top: 8px;">${d.conditions.map(c => `<li>${c}</li>`).join('')}</ul>` : '';
+            
+            // 风险警示
+            const alerts = d.alerts;
+            let alertsHTML = '';
+            if (alerts.high.length > 0) {
+                alertsHTML += alerts.high.map(a => `<div class="alert-high"><strong>🔴 高风险：</strong>${a}</div>`).join('');
+            }
+            if (alerts.medium.length > 0) {
+                alertsHTML += alerts.medium.map(a => `<div class="alert-medium"><strong>🟡 中风险：</strong>${a}</div>`).join('');
+            }
+            if (alerts.low.length > 0) {
+                alertsHTML += alerts.low.map(a => `<div style="padding: 12px; background: #e8f5e9; border-left: 4px solid #4caf50; margin-bottom: 8px; border-radius: 4px;"><strong>🟢 低风险：</strong>${a}</div>`).join('');
+            }
+            document.getElementById('riskAlerts').innerHTML = alertsHTML || '<p style="color: #666;">暂无风险警示</p>';
+            
+            // 显示或隐藏风险警示区域
+            document.getElementById('riskAlertsSection').style.display = alertsHTML ? 'block' : 'none';
+            
+            // AI辅助提问
+            document.getElementById('questionCount').textContent = d.questions.length > 0 ? `(${d.questions.length}个建议问题)` : '(无需额外提问)';
+            document.getElementById('questions').innerHTML = d.questions.length > 0 ? 
+                d.questions.map((q, i) => `<p style="margin-bottom: 12px;"><strong>Q${i+1}:</strong> ${q}</p>`).join('') :
+                '<p style="color: #666;">客户资质优秀，无需额外提问</p>';
+        }
+
+        window.onload = () => {
+            // 从URL参数获取案例ID
+            const urlParams = new URLSearchParams(window.location.search);
+            const caseId = urlParams.get('case') || 'case2';
+            
+            // 更新下拉菜单选中状态
+            document.querySelector('.case-selector').value = caseId;
+            
+            // 加载案例
+            switchCase(caseId);
+        };
+
+        function exportToPDF() {
+            const btn = document.getElementById('exportBtn');
+            btn.textContent = '⏳ 生成中...';
+            btn.disabled = true;
+            
+            html2pdf().set({
+                margin: 10,
+                filename: 'VW信审报告_' + Date.now() + '.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            }).from(document.querySelector('.report-container')).save().then(() => {
+                btn.textContent = '📄 导出PDF';
+                btn.disabled = false;
+                alert('✅ PDF导出成功！');
+            });
+        }
+    </script>
+</body>
+</html>

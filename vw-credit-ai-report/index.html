@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>大众汽车金融 - AI信审报告系统</title>
+    
+    <!-- 样式文件 -->
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/report.css">
+    <link rel="stylesheet" href="css/print.css" media="print">
+    
+    <!-- Vue.js 3.x CDN -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    
+    <!-- ECharts 5.x CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    
+    <!-- jsPDF CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    
+    <!-- html2canvas CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+<body>
+    <div id="app">
+        <!-- 顶部工具栏 -->
+        <div class="toolbar" v-if="!isPrinting">
+            <div class="toolbar-left">
+                <img src="assets/logo.png" alt="大众汽车金融" class="logo" onerror="this.style.display='none'">
+                <h1>AI信审报告系统</h1>
+            </div>
+            <div class="toolbar-right">
+                <select v-model="selectedCase" @change="loadCase" class="case-selector">
+                    <option value="case1">案例1 - 优质客户(A级)</option>
+                    <option value="case2">案例2 - 良好客户(B级)</option>
+                    <option value="case3">案例3 - 一般客户(C级)</option>
+                    <option value="case4">案例4 - 关注客户(D级)</option>
+                    <option value="case5">案例5 - 拒绝客户(E级)</option>
+                </select>
+                <button @click="printReport" class="btn btn-secondary">
+                    <span class="icon">🖨️</span> 打印报告
+                </button>
+                <button @click="exportPDF" class="btn btn-primary">
+                    <span class="icon">📄</span> 导出PDF
+                </button>
+            </div>
+        </div>
+
+        <!-- 加载动画 -->
+        <div v-if="loading" class="loading-overlay">
+            <div class="loading-spinner"></div>
+            <p>正在生成AI信审报告...</p>
+        </div>
+
+        <!-- 主报告内容 -->
+        <div class="report-container" id="report-content" v-show="!loading">
+            <!-- 报告头部 -->
+            <div class="report-header">
+                <div class="header-left">
+                    <div class="logo-placeholder">VW</div>
+                    <div class="header-title">
+                        <h2>大众汽车金融</h2>
+                        <p>AI智能信审报告</p>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <div class="report-meta">
+                        <p><strong>报告日期：</strong>{{ reportDate }}</p>
+                        <p><strong>报告编号：</strong>{{ reportNumber }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 客户概览 -->
+            <div class="report-section customer-overview">
+                <h3 class="section-title">
+                    <span class="icon">👤</span> 客户概览
+                </h3>
+                <div class="overview-grid">
+                    <div class="overview-item">
+                        <label>姓名：</label>
+                        <span>{{ customer.name }}</span>
+                    </div>
+                    <div class="overview-item">
+                        <label>性别：</label>
+                        <span>{{ customer.gender }}</span>
+                    </div>
+                    <div class="overview-item">
+                        <label>年龄：</label>
+                        <span>{{ customer.age }}岁</span>
+                    </div>
+                    <div class="overview-item">
+                        <label>申请产品：</label>
+                        <span>{{ customer.product }}</span>
+                    </div>
+                    <div class="overview-item">
+                        <label>申请金额：</label>
+                        <span class="highlight">¥{{ formatNumber(customer.amount) }}</span>
+                    </div>
+                    <div class="overview-item">
+                        <label>贷款期限：</label>
+                        <span>{{ customer.term }}期</span>
+                    </div>
+                    <div class="overview-item full-width">
+                        <label>车型：</label>
+                        <span>{{ customer.vehicle }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 风险评估和关键指标 -->
+            <div class="report-section risk-assessment-section">
+                <div class="risk-left">
+                    <h3 class="section-title">
+                        <span class="icon">⚠️</span> 风险评估
+                    </h3>
+                    <div class="risk-score-container">
+                        <div class="risk-score" :class="'risk-level-' + riskAssessment.level">
+                            <div class="score-value">{{ riskAssessment.score }}</div>
+                            <div class="score-label">综合评分</div>
+                            <div class="risk-level">{{ getRiskLevelText(riskAssessment.level) }}</div>
+                        </div>
+                    </div>
+                    <div class="risk-radar" id="riskRadar"></div>
+                </div>
+                <div class="risk-right">
+                    <h3 class="section-title">
+                        <span class="icon">📊</span> 关键指标
+                    </h3>
+                    <div class="indicators-list">
+                        <div class="indicator-item">
+                            <div class="indicator-label">
+                                <span>债务收入比 (DSR)</span>
+                                <span class="indicator-value">{{ keyIndicators.dsr }}%</span>
+                            </div>
+                            <div class="indicator-bar">
+                                <div class="indicator-fill" :style="{width: keyIndicators.dsr + '%'}" 
+                                     :class="getIndicatorClass('dsr', keyIndicators.dsr)"></div>
+                            </div>
+                        </div>
+                        <div class="indicator-item">
+                            <div class="indicator-label">
+                                <span>贷款价值比 (LTV)</span>
+                                <span class="indicator-value">{{ keyIndicators.ltv }}%</span>
+                            </div>
+                            <div class="indicator-bar">
+                                <div class="indicator-fill" :style="{width: keyIndicators.ltv + '%'}"
+                                     :class="getIndicatorClass('ltv', keyIndicators.ltv)"></div>
+                            </div>
+                        </div>
+                        <div class="indicator-item">
+                            <div class="indicator-label">
+                                <span>月收入</span>
+                                <span class="indicator-value">¥{{ formatNumber(keyIndicators.monthlyIncome) }}</span>
+                            </div>
+                        </div>
+                        <div class="indicator-item">
+                            <div class="indicator-label">
+                                <span>征信评分</span>
+                                <span class="indicator-value">{{ keyIndicators.creditScore }}</span>
+                            </div>
+                        </div>
+                        <div class="indicator-item">
+                            <div class="indicator-label">
+                                <span>逾期次数</span>
+                                <span class="indicator-value" :class="keyIndicators.overdueCount > 0 ? 'text-danger' : 'text-success'">
+                                    {{ keyIndicators.overdueCount }}次
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RAG智能信息汇总 -->
+            <div class="report-section rag-summary">
+                <h3 class="section-title">
+                    <span class="icon">🤖</span> AI智能信息汇总 <span class="badge">RAG技术</span>
+                </h3>
+                <div class="rag-grid">
+                    <div class="rag-item">
+                        <div class="rag-icon">📊</div>
+                        <div class="rag-content">
+                            <strong>财报摘要：</strong>
+                            <p>{{ ragSummary.financial }}</p>
+                        </div>
+                    </div>
+                    <div class="rag-item">
+                        <div class="rag-icon">🔍</div>
+                        <div class="rag-content">
+                            <strong>第三方数据：</strong>
+                            <p>{{ ragSummary.thirdParty }}</p>
+                        </div>
+                    </div>
+                    <div class="rag-item">
+                        <div class="rag-icon">📰</div>
+                        <div class="rag-content">
+                            <strong>舆情监测：</strong>
+                            <p>{{ ragSummary.sentiment }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI建议审核方向 -->
+            <div class="report-section ai-recommendations">
+                <h3 class="section-title">
+                    <span class="icon">🎯</span> AI建议审核方向
+                </h3>
+                <div class="recommendations-list">
+                    <div v-for="(direction, index) in aiRecommendations.directions" 
+                         :key="index" 
+                         class="recommendation-item"
+                         :class="'priority-' + direction.priority">
+                        <div class="recommendation-number">{{ index + 1 }}</div>
+                        <div class="recommendation-content">
+                            <p>{{ direction.text }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 审批建议 -->
+            <div class="report-section approval-recommendation">
+                <h3 class="section-title">
+                    <span class="icon">✅</span> 审批建议
+                </h3>
+                <div class="approval-grid">
+                    <div class="approval-item decision" :class="'decision-' + recommendation.decision">
+                        <label>建议决策：</label>
+                        <span class="decision-badge">{{ getDecisionText(recommendation.decision) }}</span>
+                    </div>
+                    <div class="approval-item">
+                        <label>建议额度：</label>
+                        <span>¥{{ formatNumber(recommendation.loanAmountMin) }} - ¥{{ formatNumber(recommendation.loanAmountMax) }}</span>
+                    </div>
+                    <div class="approval-item">
+                        <label>建议利率：</label>
+                        <span>{{ recommendation.interestRateMin }}% - {{ recommendation.interestRateMax }}%</span>
+                    </div>
+                    <div class="approval-item">
+                        <label>预期违约率：</label>
+                        <span :class="recommendation.defaultProbability > 5 ? 'text-danger' : 'text-success'">
+                            {{ recommendation.defaultProbability }}%
+                        </span>
+                    </div>
+                </div>
+                <div v-if="recommendation.conditions && recommendation.conditions.length > 0" class="approval-conditions">
+                    <strong>附加条件：</strong>
+                    <ul>
+                        <li v-for="(condition, index) in recommendation.conditions" :key="index">
+                            {{ condition }}
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- AI辅助提问 -->
+            <div class="report-section ai-questions">
+                <h3 class="section-title" @click="toggleQuestions" style="cursor: pointer;">
+                    <span class="icon">💬</span> AI辅助提问
+                    <span class="toggle-icon">{{ showQuestions ? '▼' : '▶' }}</span>
+                    <span class="question-count">({{ aiRecommendations.questions.length }}个建议问题)</span>
+                </h3>
+                <div v-show="showQuestions" class="questions-list">
+                    <div v-for="(question, index) in aiRecommendations.questions" 
+                         :key="index" 
+                         class="question-item">
+                        <div class="question-header">
+                            <span class="question-category">{{ question.category }}</span>
+                            <span class="question-priority" :class="'priority-' + question.priority">
+                                优先级{{ question.priority }}
+                            </span>
+                        </div>
+                        <div class="question-content">
+                            <strong>Q{{ index + 1 }}:</strong> {{ question.question }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 风险提示 -->
+            <div class="report-section risk-alerts">
+                <h3 class="section-title">
+                    <span class="icon">⚡</span> 风险提示
+                </h3>
+                <div class="alerts-grid">
+                    <div v-if="riskAlerts.high.length > 0" class="alert-group alert-high">
+                        <strong>⛔ 高风险项：</strong>
+                        <ul>
+                            <li v-for="(alert, index) in riskAlerts.high" :key="index">{{ alert }}</li>
+                        </ul>
+                    </div>
+                    <div v-if="riskAlerts.medium.length > 0" class="alert-group alert-medium">
+                        <strong>⚠️ 需关注项：</strong>
+                        <ul>
+                            <li v-for="(alert, index) in riskAlerts.medium" :key="index">{{ alert }}</li>
+                        </ul>
+                    </div>
+                    <div v-if="riskAlerts.low.length > 0" class="alert-group alert-low">
+                        <strong>ℹ️ 一般提示：</strong>
+                        <ul>
+                            <li v-for="(alert, index) in riskAlerts.low" :key="index">{{ alert }}</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 决策依据 -->
+            <div class="report-section decision-basis">
+                <h3 class="section-title">
+                    <span class="icon">📋</span> 决策依据
+                </h3>
+                <div class="basis-content">
+                    <div class="basis-item">
+                        <strong>数据来源：</strong>
+                        <span>{{ decisionBasis.dataSources.join('、') }}</span>
+                    </div>
+                    <div class="basis-item">
+                        <strong>模型版本：</strong>
+                        <span>{{ decisionBasis.modelVersion }}</span>
+                    </div>
+                    <div class="basis-item">
+                        <strong>AI置信度：</strong>
+                        <span>{{ decisionBasis.confidence }}%</span>
+                    </div>
+                </div>
+                <div class="disclaimer">
+                    <p>⚠️ <strong>免责声明：</strong>本报告由AI系统自动生成，仅供参考。最终信审决策需由专业信审员基于完整信息进行人工复核和判断。</p>
+                </div>
+            </div>
+
+            <!-- 报告页脚 -->
+            <div class="report-footer">
+                <p>© 2024 大众汽车金融服务有限公司 | AI信审报告系统 v1.0</p>
+                <p>本报告为机密文件，仅供内部使用</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript文件 -->
+    <script src="js/data.js"></script>
+    <script src="js/charts.js"></script>
+    <script src="js/export.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

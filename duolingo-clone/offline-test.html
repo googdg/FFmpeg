@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>离线功能测试 - 多邻国克隆</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 20px;
+            background: linear-gradient(135deg, #1cb0f6 0%, #0ea5e9 100%);
+            color: white;
+            border-radius: 12px;
+        }
+        
+        .section {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .section h3 {
+            margin-top: 0;
+            color: #333;
+            border-bottom: 2px solid #1cb0f6;
+            padding-bottom: 8px;
+        }
+        
+        .test-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .test-item:last-child {
+            border-bottom: none;
+        }
+        
+        .test-name {
+            font-weight: 500;
+        }
+        
+        .test-status {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .status-pass {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status-fail {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            margin: 5px;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: #1cb0f6;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #0ea5e9;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            max-height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+        
+        .network-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .online {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .offline {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+        
+        .dot-online {
+            background: #28a745;
+        }
+        
+        .dot-offline {
+            background: #dc3545;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #f0f0f0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 8px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: #1cb0f6;
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📱 离线功能测试</h1>
+        <p>测试多邻国克隆应用的离线学习功能</p>
+    </div>
+
+    <div id="networkStatus" class="network-status">
+        <div class="status-dot" id="statusDot"></div>
+        <span id="statusText">检查网络状态...</span>
+    </div>
+
+    <div class="section">
+        <h3>🔧 功能测试</h3>
+        
+        <div class="test-item">
+            <div class="test-name">IndexedDB 支持</div>
+            <div class="test-status" id="indexeddb-status">待测试</div>
+        </div>
+        
+        <div class="test-item">
+            <div class="test-name">离线服务初始化</div>
+            <div class="test-status" id="offline-service-status">待测试</div>
+        </div>
+        
+        <div class="test-item">
+            <div class="test-name">模拟课程下载</div>
+            <div class="test-status" id="download-status">待测试</div>
+        </div>
+        
+        <div class="test-item">
+            <div class="test-name">离线内容读取</div>
+            <div class="test-status" id="read-status">待测试</div>
+        </div>
+        
+        <div class="test-item">
+            <div class="test-name">离线进度保存</div>
+            <div class="test-status" id="progress-status">待测试</div>
+        </div>
+        
+        <div class="test-item">
+            <div class="test-name">进度同步模拟</div>
+            <div class="test-status" id="sync-status">待测试</div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h3>🎮 操作面板</h3>
+        
+        <button class="btn btn-primary" onclick="runAllTests()">运行所有测试</button>
+        <button class="btn btn-primary" onclick="simulateDownload()">模拟下载课程</button>
+        <button class="btn btn-secondary" onclick="checkStorage()">检查存储</button>
+        <button class="btn btn-danger" onclick="clearStorage()">清空存储</button>
+        
+        <div style="margin-top: 15px;">
+            <div>下载进度:</div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="downloadProgress" style="width: 0%"></div>
+            </div>
+            <div id="downloadText" style="font-size: 12px; color: #666; margin-top: 4px;">
+                准备开始...
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h3>📋 测试日志</h3>
+        <div class="log" id="testLog">等待测试开始...\n</div>
+        <button class="btn btn-secondary" onclick="clearLog()">清空日志</button>
+    </div>
+
+    <script>
+        // 简化的离线服务实现（用于测试）
+        class SimpleOfflineService {
+            constructor() {
+                this.dbName = 'duolingo-test';
+                this.dbVersion = 1;
+                this.db = null;
+            }
+
+            async init() {
+                return new Promise((resolve, reject) => {
+                    const request = indexedDB.open(this.dbName, this.dbVersion);
+                    
+                    request.onerror = () => reject(request.error);
+                    request.onsuccess = () => {
+                        this.db = request.result;
+                        resolve();
+                    };
+                    
+                    request.onupgradeneeded = (event) => {
+                        const db = event.target.result;
+                        
+                        if (!db.objectStoreNames.contains('content')) {
+                            const contentStore = db.createObjectStore('content', { keyPath: 'id' });
+                            contentStore.createIndex('type', 'type', { unique: false });
+                        }
+                        
+                        if (!db.objectStoreNames.contains('progress')) {
+                            db.createObjectStore('progress', { keyPath: 'sessionId' });
+                        }
+                    };
+                });
+            }
+
+            async saveContent(content) {
+                const transaction = this.db.transaction(['content'], 'readwrite');
+                const store = transaction.objectStore('content');
+                return store.put(content);
+            }
+
+            async getContent(id) {
+                const transaction = this.db.transaction(['content'], 'readonly');
+                const store = transaction.objectStore('content');
+                return new Promise((resolve, reject) => {
+                    const request = store.get(id);
+                    request.onsuccess = () => resolve(request.result);
+                    request.onerror = () => reject(request.error);
+                });
+            }
+
+            async saveProgress(progress) {
+                const transaction = this.db.transaction(['progress'], 'readwrite');
+                const store = transaction.objectStore('progress');
+                return store.put(progress);
+            }
+
+            async getAllContent() {
+                const transaction = this.db.transaction(['content'], 'readonly');
+                const store = transaction.objectStore('content');
+                return new Promise((resolve, reject) => {
+                    const request = store.getAll();
+                    request.onsuccess = () => resolve(request.result);
+                    request.onerror = () => reject(request.error);
+                });
+            }
+
+            async clearAll() {
+                const transaction = this.db.transaction(['content', 'progress'], 'readwrite');
+                await Promise.all([
+                    transaction.objectStore('content').clear(),
+                    transaction.objectStore('progress').clear()
+                ]);
+            }
+        }
+
+        // 全局变量
+        let offlineService = new SimpleOfflineService();
+        let testLog = '';
+
+        // 日志函数
+        function log(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            testLog += `[${timestamp}] ${message}\n`;
+            document.getElementById('testLog').textContent = testLog;
+            document.getElementById('testLog').scrollTop = document.getElementById('testLog').scrollHeight;
+        }
+
+        function clearLog() {
+            testLog = '';
+            document.getElementById('testLog').textContent = '日志已清空...\n';
+        }
+
+        // 更新测试状态
+        function updateTestStatus(testId, status, message = '') {
+            const element = document.getElementById(testId + '-status');
+            element.className = 'test-status status-' + status;
+            element.textContent = message || status;
+        }
+
+        // 网络状态监控
+        function updateNetworkStatus() {
+            const isOnline = navigator.onLine;
+            const statusDiv = document.getElementById('networkStatus');
+            const statusDot = document.getElementById('statusDot');
+            const statusText = document.getElementById('statusText');
+            
+            if (isOnline) {
+                statusDiv.className = 'network-status online';
+                statusDot.className = 'status-dot dot-online';
+                statusText.textContent = '在线模式';
+            } else {
+                statusDiv.className = 'network-status offline';
+                statusDot.className = 'status-dot dot-offline';
+                statusText.textContent = '离线模式';
+            }
+        }
+
+        // 测试函数
+        async function testIndexedDB() {
+            try {
+                if (!window.indexedDB) {
+                    throw new Error('IndexedDB not supported');
+                }
+                updateTestStatus('indexeddb', 'pass', '支持');
+                log('✅ IndexedDB 支持检查通过');
+                return true;
+            } catch (error) {
+                updateTestStatus('indexeddb', 'fail', '不支持');
+                log('❌ IndexedDB 支持检查失败: ' + error.message);
+                return false;
+            }
+        }
+
+        async function testOfflineServiceInit() {
+            try {
+                await offlineService.init();
+                updateTestStatus('offline-service', 'pass', '初始化成功');
+                log('✅ 离线服务初始化成功');
+                return true;
+            } catch (error) {
+                updateTestStatus('offline-service', 'fail', '初始化失败');
+                log('❌ 离线服务初始化失败: ' + error.message);
+                return false;
+            }
+        }
+
+        async function testDownload() {
+            try {
+                updateTestStatus('download', 'pending', '下载中...');
+                log('📥 开始模拟课程下载...');
+                
+                // 模拟课程数据
+                const mockCourse = {
+                    id: 'course_test',
+                    type: 'course',
+                    data: {
+                        id: 'test-course',
+                        name: '测试课程',
+                        units: [
+                            {
+                                id: 'unit-1',
+                                name: '单元1',
+                                skills: [
+                                    {
+                                        id: 'skill-1',
+                                        name: '技能1',
+                                        lessons: [
+                                            { id: 'lesson-1', name: '课程1' },
+                                            { id: 'lesson-2', name: '课程2' }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    downloadedAt: new Date(),
+                    size: 1024
+                };
+                
+                // 模拟下载进度
+                for (let i = 0; i <= 100; i += 10) {
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                    updateDownloadProgress(i, `下载课程内容... ${i}%`);
+                }
+                
+                await offlineService.saveContent(mockCourse);
+                
+                updateTestStatus('download', 'pass', '下载完成');
+                log('✅ 模拟课程下载完成');
+                return true;
+            } catch (error) {
+                updateTestStatus('download', 'fail', '下载失败');
+                log('❌ 模拟课程下载失败: ' + error.message);
+                return false;
+            }
+        }
+
+        async function testRead() {
+            try {
+                const content = await offlineService.getContent('course_test');
+                if (content && content.data) {
+                    updateTestStatus('read', 'pass', '读取成功');
+                    log('✅ 离线内容读取成功: ' + content.data.name);
+                    return true;
+                } else {
+                    throw new Error('No content found');
+                }
+            } catch (error) {
+                updateTestStatus('read', 'fail', '读取失败');
+                log('❌ 离线内容读取失败: ' + error.message);
+                return false;
+            }
+        }
+
+        async function testProgress() {
+            try {
+                const mockProgress = {
+                    sessionId: 'session_test_' + Date.now(),
+                    lessonId: 'lesson-1',
+                    exercises: [],
+                    currentIndex: 0,
+                    answers: [
+                        { exerciseId: 'ex1', isCorrect: true },
+                        { exerciseId: 'ex2', isCorrect: false }
+                    ],
+                    startedAt: new Date(),
+                    isCompleted: true
+                };
+                
+                await offlineService.saveProgress(mockProgress);
+                
+                updateTestStatus('progress', 'pass', '保存成功');
+                log('✅ 离线进度保存成功');
+                return true;
+            } catch (error) {
+                updateTestStatus('progress', 'fail', '保存失败');
+                log('❌ 离线进度保存失败: ' + error.message);
+                return false;
+            }
+        }
+
+        async function testSync() {
+            try {
+                // 模拟同步到服务器
+                log('📡 模拟同步进度到服务器...');
+                
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                updateTestStatus('sync', 'pass', '同步成功');
+                log('✅ 进度同步模拟完成');
+                return true;
+            } catch (error) {
+                updateTestStatus('sync', 'fail', '同步失败');
+                log('❌ 进度同步模拟失败: ' + error.message);
+                return false;
+            }
+        }
+
+        // 运行所有测试
+        async function runAllTests() {
+            log('🚀 开始运行所有测试...');
+            
+            const tests = [
+                { name: 'IndexedDB支持', fn: testIndexedDB },
+                { name: '离线服务初始化', fn: testOfflineServiceInit },
+                { name: '模拟课程下载', fn: testDownload },
+                { name: '离线内容读取', fn: testRead },
+                { name: '离线进度保存', fn: testProgress },
+                { name: '进度同步模拟', fn: testSync }
+            ];
+            
+            let passed = 0;
+            for (const test of tests) {
+                log(`🔄 运行测试: ${test.name}`);
+                const result = await test.fn();
+                if (result) passed++;
+            }
+            
+            log(`\n📊 测试完成! 通过: ${passed}/${tests.length}`);
+            
+            if (passed === tests.length) {
+                log('🎉 所有测试通过! 离线功能正常工作');
+            } else {
+                log('⚠️ 部分测试失败，请检查相关功能');
+            }
+        }
+
+        // 模拟下载
+        async function simulateDownload() {
+            await testDownload();
+        }
+
+        // 检查存储
+        async function checkStorage() {
+            try {
+                const contents = await offlineService.getAllContent();
+                log(`📊 存储检查: 找到 ${contents.length} 个离线内容`);
+                
+                contents.forEach((content, index) => {
+                    log(`  ${index + 1}. ${content.id} (${content.type}) - ${content.size} bytes`);
+                });
+                
+                if (contents.length === 0) {
+                    log('💡 提示: 没有找到离线内容，请先下载课程');
+                }
+            } catch (error) {
+                log('❌ 存储检查失败: ' + error.message);
+            }
+        }
+
+        // 清空存储
+        async function clearStorage() {
+            if (confirm('确定要清空所有离线存储吗？')) {
+                try {
+                    await offlineService.clearAll();
+                    log('🗑️ 离线存储已清空');
+                    
+                    // 重置所有测试状态
+                    ['indexeddb', 'offline-service', 'download', 'read', 'progress', 'sync'].forEach(testId => {
+                        updateTestStatus(testId, 'pending', '待测试');
+                    });
+                    
+                    updateDownloadProgress(0, '准备开始...');
+                } catch (error) {
+                    log('❌ 清空存储失败: ' + error.message);
+                }
+            }
+        }
+
+        // 更新下载进度
+        function updateDownloadProgress(progress, text) {
+            document.getElementById('downloadProgress').style.width = progress + '%';
+            document.getElementById('downloadText').textContent = text;
+        }
+
+        // 初始化
+        window.addEventListener('load', () => {
+            updateNetworkStatus();
+            log('🔧 离线功能测试页面已加载');
+            log('💡 点击"运行所有测试"开始测试离线功能');
+        });
+
+        // 监听网络状态变化
+        window.addEventListener('online', () => {
+            updateNetworkStatus();
+            log('🌐 网络已连接');
+        });
+
+        window.addEventListener('offline', () => {
+            updateNetworkStatus();
+            log('📱 网络已断开，进入离线模式');
+        });
+    </script>
+</body>
+</html>

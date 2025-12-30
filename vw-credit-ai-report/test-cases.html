@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>案例测试 - 大众汽车金融AI信审报告</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', sans-serif; background: #f5f5f5; padding: 40px; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        h1 { color: #001e50; margin-bottom: 32px; text-align: center; }
+        .case-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; }
+        .case-card { background: white; border-radius: 12px; padding: 24px; box-shadow: 0 2px 16px rgba(0,0,0,0.1); transition: transform 0.3s, box-shadow 0.3s; cursor: pointer; }
+        .case-card:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(0,0,0,0.15); }
+        .case-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        .case-title { font-size: 20px; font-weight: 600; color: #001e50; }
+        .case-score { font-size: 32px; font-weight: bold; }
+        .level-a { color: #00c853; }
+        .level-b { color: #2196f3; }
+        .level-c { color: #ffc107; }
+        .level-d { color: #ff9800; }
+        .level-e { color: #f44336; }
+        .case-info { margin-bottom: 12px; padding: 12px; background: #f5f5f5; border-radius: 8px; }
+        .case-info p { margin-bottom: 8px; font-size: 14px; }
+        .case-info p:last-child { margin-bottom: 0; }
+        .case-label { font-weight: 600; color: #666; display: inline-block; min-width: 80px; }
+        .case-decision { padding: 12px; border-radius: 8px; text-align: center; font-weight: 600; margin-top: 16px; }
+        .decision-approve { background: #e8f5e9; color: #00c853; }
+        .decision-conditional { background: #fff3e0; color: #ff9800; }
+        .decision-reject { background: #ffebee; color: #f44336; }
+        .btn { display: inline-block; padding: 12px 24px; background: #001e50; color: white; text-decoration: none; border-radius: 8px; margin-top: 16px; text-align: center; transition: background 0.3s; }
+        .btn:hover { background: #003380; }
+        .stats { background: white; border-radius: 12px; padding: 24px; margin-bottom: 32px; box-shadow: 0 2px 16px rgba(0,0,0,0.1); }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 16px; }
+        .stat-item { text-align: center; padding: 16px; background: #f5f5f5; border-radius: 8px; }
+        .stat-value { font-size: 32px; font-weight: bold; color: #001e50; }
+        .stat-label { font-size: 14px; color: #666; margin-top: 8px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚗 大众汽车金融 - AI信审报告案例测试</h1>
+        
+        <div class="stats">
+            <h2 style="color: #001e50; margin-bottom: 16px;">📊 案例统计</h2>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-value">5</div>
+                    <div class="stat-label">总案例数</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value level-a">1</div>
+                    <div class="stat-label">A级优质客户</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value level-b">1</div>
+                    <div class="stat-label">B级良好客户</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value level-c">1</div>
+                    <div class="stat-label">C级一般客户</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value level-d">1</div>
+                    <div class="stat-label">D级关注客户</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value level-e">1</div>
+                    <div class="stat-label">E级拒绝客户</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="case-grid">
+            <!-- 案例1: A级 -->
+            <div class="case-card" onclick="window.open('final.html?case=case1', '_blank')">
+                <div class="case-header">
+                    <div class="case-title">案例1</div>
+                    <div class="case-score level-a">850</div>
+                </div>
+                <div class="case-info">
+                    <p><span class="case-label">客户:</span>张** (男, 35岁)</p>
+                    <p><span class="case-label">产品:</span>新车贷款</p>
+                    <p><span class="case-label">金额:</span>¥300,000</p>
+                    <p><span class="case-label">期限:</span>36期</p>
+                    <p><span class="case-label">车型:</span>大众途观L 2024款</p>
+                    <p><span class="case-label">DSR:</span>28% | <span class="case-label">LTV:</span>65%</p>
+                    <p><span class="case-label">征信分:</span>780 | <span class="case-label">逾期:</span>0次</p>
+                </div>
+                <div class="case-decision decision-approve">✅ 批准 - 优质客户</div>
+                <a href="final.html?case=case1" class="btn" onclick="event.stopPropagation()">查看详细报告 →</a>
+            </div>
+
+            <!-- 案例2: B级 -->
+            <div class="case-card" onclick="window.open('final.html?case=case2', '_blank')">
+                <div class="case-header">
+                    <div class="case-title">案例2</div>
+                    <div class="case-score level-b">720</div>
+                </div>
+                <div class="case-info">
+                    <p><span class="case-label">客户:</span>李** (女, 32岁)</p>
+                    <p><span class="case-label">产品:</span>新车贷款</p>
+                    <p><span class="case-label">金额:</span>¥250,000</p>
+                    <p><span class="case-label">期限:</span>36期</p>
+                    <p><span class="case-label">车型:</span>大众帕萨特 2024款</p>
+                    <p><span class="case-label">DSR:</span>42% | <span class="case-label">LTV:</span>75%</p>
+                    <p><span class="case-label">征信分:</span>690 | <span class="case-label">逾期:</span>0次</p>
+                </div>
+                <div class="case-decision decision-conditional">⚠️ 有条件批准 - 良好客户</div>
+                <a href="final.html?case=case2" class="btn" onclick="event.stopPropagation()">查看详细报告 →</a>
+            </div>
+
+            <!-- 案例3: C级 -->
+            <div class="case-card" onclick="window.open('final.html?case=case3', '_blank')">
+                <div class="case-header">
+                    <div class="case-title">案例3</div>
+                    <div class="case-score level-c">580</div>
+                </div>
+                <div class="case-info">
+                    <p><span class="case-label">客户:</span>王** (男, 28岁)</p>
+                    <p><span class="case-label">产品:</span>二手车贷款</p>
+                    <p><span class="case-label">金额:</span>¥150,000</p>
+                    <p><span class="case-label">期限:</span>24期</p>
+                    <p><span class="case-label">车型:</span>大众迈腾 2021款</p>
+                    <p><span class="case-label">DSR:</span>55% | <span class="case-label">LTV:</span>85%</p>
+                    <p><span class="case-label">征信分:</span>620 | <span class="case-label">逾期:</span>2次</p>
+                </div>
+                <div class="case-decision decision-conditional">⚠️ 有条件批准 - 一般客户</div>
+                <a href="final.html?case=case3" class="btn" onclick="event.stopPropagation()">查看详细报告 →</a>
+            </div>
+
+            <!-- 案例4: D级 -->
+            <div class="case-card" onclick="window.open('final.html?case=case4', '_blank')">
+                <div class="case-header">
+                    <div class="case-title">案例4</div>
+                    <div class="case-score level-d">420</div>
+                </div>
+                <div class="case-info">
+                    <p><span class="case-label">客户:</span>赵** (男, 45岁)</p>
+                    <p><span class="case-label">产品:</span>新车贷款</p>
+                    <p><span class="case-label">金额:</span>¥400,000</p>
+                    <p><span class="case-label">期限:</span>48期</p>
+                    <p><span class="case-label">车型:</span>大众途锐 2024款</p>
+                    <p><span class="case-label">DSR:</span>68% | <span class="case-label">LTV:</span>90%</p>
+                    <p><span class="case-label">征信分:</span>550 | <span class="case-label">逾期:</span>5次</p>
+                </div>
+                <div class="case-decision decision-reject">❌ 拒绝 - 关注客户</div>
+                <a href="final.html?case=case4" class="btn" onclick="event.stopPropagation()">查看详细报告 →</a>
+            </div>
+
+            <!-- 案例5: E级 -->
+            <div class="case-card" onclick="window.open('final.html?case=case5', '_blank')">
+                <div class="case-header">
+                    <div class="case-title">案例5</div>
+                    <div class="case-score level-e">280</div>
+                </div>
+                <div class="case-info">
+                    <p><span class="case-label">客户:</span>刘** (女, 38岁)</p>
+                    <p><span class="case-label">产品:</span>新车贷款</p>
+                    <p><span class="case-label">金额:</span>¥350,000</p>
+                    <p><span class="case-label">期限:</span>36期</p>
+                    <p><span class="case-label">车型:</span>大众途昂 2024款</p>
+                    <p><span class="case-label">DSR:</span>85% | <span class="case-label">LTV:</span>95%</p>
+                    <p><span class="case-label">征信分:</span>480 | <span class="case-label">逾期:</span>12次</p>
+                </div>
+                <div class="case-decision decision-reject">❌ 立即拒绝 - 失信客户</div>
+                <a href="final.html?case=case4" class="btn" onclick="event.stopPropagation()">查看详细报告 →</a>
+            </div>
+        </div>
+
+        <div style="margin-top: 48px; padding: 24px; background: white; border-radius: 12px; box-shadow: 0 2px 16px rgba(0,0,0,0.1);">
+            <h2 style="color: #001e50; margin-bottom: 16px;">📝 测试说明</h2>
+            <ul style="line-height: 2; color: #666;">
+                <li>本页面展示了5个不同风险等级的客户案例</li>
+                <li>点击任意案例卡片或"查看详细报告"按钮可查看完整的AI信审报告</li>
+                <li>每个案例包含完整的客户信息、风险评估、RAG智能汇总、AI建议和审批决策</li>
+                <li>案例涵盖从A级(优质)到E级(拒绝)的全部风险等级</li>
+                <li>在报告页面可以通过顶部下拉菜单切换不同案例</li>
+            </ul>
+        </div>
+
+        <div style="margin-top: 32px; text-align: center; color: #999; font-size: 14px;">
+            <p>© 2024 大众汽车金融服务有限公司 | AI信审报告系统 v1.0</p>
+            <p style="margin-top: 8px;">服务器运行在: <a href="http://localhost:8000" target="_blank" style="color: #00b0f0;">http://localhost:8000</a></p>
+        </div>
+    </div>
+
+    <script>
+        // 页面加载完成后的提示
+        window.onload = function() {
+            console.log('✅ 案例测试页面加载完成');
+            console.log('📊 共有5个测试案例可用');
+            console.log('🔗 访问地址: http://localhost:8000/test-cases.html');
+        };
+    </script>
+</body>
+</html>

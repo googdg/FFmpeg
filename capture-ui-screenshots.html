@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UI截图助手 - 奥友医学视频平台</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8f9fa;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        
+        .header h1 {
+            color: #4a9eff;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            color: #666;
+            font-size: 16px;
+        }
+        
+        .section {
+            margin-bottom: 40px;
+        }
+        
+        .section h2 {
+            color: #333;
+            font-size: 20px;
+            margin-bottom: 20px;
+            padding-left: 10px;
+            border-left: 4px solid #4a9eff;
+        }
+        
+        .screenshot-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .screenshot-item {
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            background: #fafafa;
+            transition: all 0.3s ease;
+        }
+        
+        .screenshot-item:hover {
+            border-color: #4a9eff;
+            background: white;
+            transform: translateY(-2px);
+        }
+        
+        .screenshot-item h3 {
+            color: #333;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+        
+        .screenshot-item p {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+        
+        .screenshot-specs {
+            background: #f0f8ff;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-size: 12px;
+            color: #4a9eff;
+        }
+        
+        .action-btn {
+            background: #4a9eff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+            width: 100%;
+        }
+        
+        .action-btn:hover {
+            background: #3a8eef;
+        }
+        
+        .action-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .device-selector {
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .device-btn {
+            background: #f8f9fa;
+            border: 2px solid #e0e0e0;
+            padding: 10px 20px;
+            margin: 0 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .device-btn.active {
+            background: #4a9eff;
+            color: white;
+            border-color: #4a9eff;
+        }
+        
+        .instructions {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .instructions h3 {
+            color: #856404;
+            margin-bottom: 10px;
+        }
+        
+        .instructions ol {
+            color: #856404;
+            padding-left: 20px;
+        }
+        
+        .instructions li {
+            margin-bottom: 5px;
+        }
+        
+        .status {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #28a745;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 6px;
+            display: none;
+            z-index: 1000;
+        }
+        
+        .checklist {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        
+        .checklist h3 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+        
+        .checklist-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            padding: 8px;
+            border-radius: 4px;
+            transition: background 0.3s;
+        }
+        
+        .checklist-item:hover {
+            background: white;
+        }
+        
+        .checklist-item input[type="checkbox"] {
+            margin-right: 10px;
+            transform: scale(1.2);
+        }
+        
+        .checklist-item label {
+            color: #333;
+            cursor: pointer;
+            flex: 1;
+        }
+        
+        .priority-high { border-left: 4px solid #dc3545; }
+        .priority-medium { border-left: 4px solid #ffc107; }
+        .priority-low { border-left: 4px solid #28a745; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎨 UI截图助手</h1>
+            <p>为奥友医学视频平台UI设计师提供详细的界面截图指导</p>
+        </div>
+        
+        <div class="instructions">
+            <h3>📋 使用说明</h3>
+            <ol>
+                <li>确保本地服务器正在运行: <code>python3 -m http.server 3000</code></li>
+                <li>选择目标设备尺寸（桌面端/移动端）</li>
+                <li>点击对应的截图按钮，会自动打开目标页面</li>
+                <li>使用浏览器的截图功能或开发者工具截图</li>
+                <li>按照建议的文件名保存截图</li>
+                <li>在清单中勾选已完成的截图</li>
+            </ol>
+        </div>
+        
+        <div class="device-selector">
+            <h3>📱 选择设备尺寸</h3>
+            <button class="device-btn active" onclick="setDevice('desktop')">🖥️ 桌面端 (1440px)</button>
+            <button class="device-btn" onclick="setDevice('tablet')">📱 平板端 (768px)</button>
+            <button class="device-btn" onclick="setDevice('mobile')">📱 移动端 (375px)</button>
+        </div>
+        
+        <div class="section">
+            <h2>🏠 主页面截图</h2>
+            <div class="screenshot-grid">
+                <div class="screenshot-item priority-high">
+                    <h3>完整主页面</h3>
+                    <p>包含导航栏、分类标签、视频网格的完整页面截图</p>
+                    <div class="screenshot-specs">
+                        文件名: <span id="homepage-filename">desktop-homepage-full.png</span><br>
+                        尺寸: <span id="homepage-size">1440px 宽度</span>
+                    </div>
+                    <button class="action-btn" onclick="openPage('homepage')">📸 截图主页面</button>
+                </div>
+                
+                <div class="screenshot-item priority-high">
+                    <h3>导航栏特写</h3>
+                    <p>顶部导航栏的详细样式，包含Logo、搜索框、用户区域</p>
+                    <div class="screenshot-specs">
+                        文件名: <span id="header-filename">desktop-header-detail.png</span><br>
+                        截图范围: 页面顶部到分类标签上方
+                    </div>
+                    <button class="action-btn" onclick="openPage('homepage')">📸 截图导航栏</button>
+                </div>
+                
+                <div class="screenshot-item priority-high">
+                    <h3>分类标签栏</h3>
+                    <p>医学分类标签的样式和排列，包含选中状态</p>
+                    <div class="screenshot-specs">
+                        文件名: <span id="categories-filename">desktop-categories-detail.png</span><br>
+                        注意: 截图选中和未选中状态
+                    </div>
+                    <button class="action-btn" onclick="openPage('homepage')">📸 截图分类标签</button>
+                </div>
+                
+                <div class="screenshot-item priority-high">
+                    <h3>视频卡片详情</h3>
+                    <p>单个视频卡片的详细样式，包含缩略图、信息区域</p>
+                    <div class="screenshot-specs">
+                        文件名: <span id="card-filename">desktop-video-card-detail.png</span><br>
+                        注意: 卡片阴影和圆角效果
+                    </div>
+                    <button class="action-btn" onclick="openPage('homepage')">📸 截图视频卡片</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>🔐 邀请码弹窗截图</h2>
+            <div class="screenshot-grid">
+                <div class="screenshot-item priority-high">
+                    <h3>邀请码弹窗</h3>
+                    <p>邀请码验证弹窗的完整样式，包含背景遮罩</p>
+                    <div class="screenshot-specs">
+                        文件名: <span id="modal-filename">desktop-invite-modal.png</span><br>
+                        操作: 点击视频后截图弹窗
+                    </div>
+                    <button class="action-btn" onclick="openInviteModal()">📸 截图邀请码弹窗</button>
+                </div>
+                
+                <div class="screenshot-item priority-medium">
+                    <h3>输入状态</h3>
+                    <p>输入邀请码时的状态，包含焦点效果</p>
+                    <div class="screenshot-specs">
+                        文件名: invite-modal-input-state.png<br>
+                        操作: 在输入框中输入数字后截图
+                    </div>
+                    <button class="action-btn" onclick="openInviteModal()">📸 截图输入状态</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>🎬 视频详情页截图</h2>
+            <div class="screenshot-grid">
+                <div class="screenshot-item priority-high">
+                    <h3>视频详情页</h3>
+                    <p>完整的视频播放页面，包含播放器和信息区域</p>
+                    <div class="screenshot-specs">
+                        文件名: <span id="detail-filename">desktop-video-detail-full.png</span><br>
+                        注意: 需要先通过邀请码验证
+                    </div>
+                    <button class="action-btn" onclick="openVideoDetail()">📸 截图视频详情</button>
+                </div>
+                
+                <div class="screenshot-item priority-medium">
+                    <h3>视频播放器</h3>
+                    <p>视频播放器区域的详细样式</p>
+                    <div class="screenshot-specs">
+                        文件名: video-player-detail.png<br>
+                        截图范围: 仅播放器区域
+                    </div>
+                    <button class="action-btn" onclick="openVideoDetail()">📸 截图播放器</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>🧪 测试页面截图</h2>
+            <div class="screenshot-grid">
+                <div class="screenshot-item priority-low">
+                    <h3>邀请码测试页</h3>
+                    <p>独立的邀请码功能测试页面</p>
+                    <div class="screenshot-specs">
+                        文件名: invite-code-test-page.png<br>
+                        页面: invite-code-test.html
+                    </div>
+                    <button class="action-btn" onclick="openTestPage()">📸 截图测试页</button>
+                </div>
+                
+                <div class="screenshot-item priority-low">
+                    <h3>错误诊断页</h3>
+                    <p>调试和错误诊断工具页面</p>
+                    <div class="screenshot-specs">
+                        文件名: debug-errors-page.png<br>
+                        页面: debug-errors.html
+                    </div>
+                    <button class="action-btn" onclick="openDebugPage()">📸 截图调试页</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="checklist">
+            <h3>✅ 截图完成清单</h3>
+            
+            <div class="checklist-item priority-high">
+                <input type="checkbox" id="check1">
+                <label for="check1">桌面端主页完整截图 (desktop-homepage-full.png)</label>
+            </div>
+            
+            <div class="checklist-item priority-high">
+                <input type="checkbox" id="check2">
+                <label for="check2">移动端主页完整截图 (mobile-homepage-full.png)</label>
+            </div>
+            
+            <div class="checklist-item priority-high">
+                <input type="checkbox" id="check3">
+                <label for="check3">桌面端邀请码弹窗 (desktop-invite-modal.png)</label>
+            </div>
+            
+            <div class="checklist-item priority-high">
+                <input type="checkbox" id="check4">
+                <label for="check4">移动端邀请码弹窗 (mobile-invite-modal.png)</label>
+            </div>
+            
+            <div class="checklist-item priority-high">
+                <input type="checkbox" id="check5">
+                <label for="check5">桌面端视频详情页 (desktop-video-detail-full.png)</label>
+            </div>
+            
+            <div class="checklist-item priority-high">
+                <input type="checkbox" id="check6">
+                <label for="check6">视频卡片详细样式 (desktop-video-card-detail.png)</label>
+            </div>
+            
+            <div class="checklist-item priority-high">
+                <input type="checkbox" id="check7">
+                <label for="check7">导航栏详细样式 (desktop-header-detail.png)</label>
+            </div>
+            
+            <div class="checklist-item priority-high">
+                <input type="checkbox" id="check8">
+                <label for="check8">分类标签详细样式 (desktop-categories-detail.png)</label>
+            </div>
+            
+            <div class="checklist-item priority-medium">
+                <input type="checkbox" id="check9">
+                <label for="check9">卡片悬停效果 (desktop-video-card-hover.png)</label>
+            </div>
+            
+            <div class="checklist-item priority-medium">
+                <input type="checkbox" id="check10">
+                <label for="check10">邀请码输入状态 (invite-modal-input-state.png)</label>
+            </div>
+            
+            <div class="checklist-item priority-medium">
+                <input type="checkbox" id="check11">
+                <label for="check11">视频播放器样式 (video-player-detail.png)</label>
+            </div>
+            
+            <div class="checklist-item priority-low">
+                <input type="checkbox" id="check12">
+                <label for="check12">邀请码测试页 (invite-code-test-page.png)</label>
+            </div>
+        </div>
+    </div>
+    
+    <div class="status" id="status">截图助手已就绪</div>
+    
+    <script>
+        let currentDevice = 'desktop';
+        
+        // 设备尺寸配置
+        const deviceConfig = {
+            desktop: {
+                width: 1440,
+                name: '桌面端',
+                prefix: 'desktop'
+            },
+            tablet: {
+                width: 768,
+                name: '平板端',
+                prefix: 'tablet'
+            },
+            mobile: {
+                width: 375,
+                name: '移动端',
+                prefix: 'mobile'
+            }
+        };
+        
+        // 设置设备类型
+        function setDevice(device) {
+            currentDevice = device;
+            
+            // 更新按钮状态
+            document.querySelectorAll('.device-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // 更新文件名
+            updateFilenames();
+            
+            showStatus(`已切换到${deviceConfig[device].name}模式`);
+        }
+        
+        // 更新文件名
+        function updateFilenames() {
+            const config = deviceConfig[currentDevice];
+            document.getElementById('homepage-filename').textContent = `${config.prefix}-homepage-full.png`;
+            document.getElementById('header-filename').textContent = `${config.prefix}-header-detail.png`;
+            document.getElementById('categories-filename').textContent = `${config.prefix}-categories-detail.png`;
+            document.getElementById('card-filename').textContent = `${config.prefix}-video-card-detail.png`;
+            document.getElementById('modal-filename').textContent = `${config.prefix}-invite-modal.png`;
+            document.getElementById('detail-filename').textContent = `${config.prefix}-video-detail-full.png`;
+            document.getElementById('homepage-size').textContent = `${config.width}px 宽度`;
+        }
+        
+        // 打开页面
+        function openPage(type) {
+            const baseUrl = 'http://localhost:3000/';
+            let url = '';
+            
+            switch(type) {
+                case 'homepage':
+                    url = baseUrl + 'aoyou-youtube-style.html';
+                    break;
+                case 'detail':
+                    url = baseUrl + 'video-detail.html';
+                    break;
+            }
+            
+            // 在新窗口打开
+            const newWindow = window.open(url, '_blank');
+            
+            // 设置窗口尺寸
+            setTimeout(() => {
+                const config = deviceConfig[currentDevice];
+                newWindow.resizeTo(config.width + 100, 900);
+            }, 1000);
+            
+            showStatus(`已打开${type}页面，请进行截图`);
+        }
+        
+        // 打开邀请码弹窗
+        function openInviteModal() {
+            const url = 'http://localhost:3000/aoyou-youtube-style.html';
+            const newWindow = window.open(url, '_blank');
+            
+            setTimeout(() => {
+                const config = deviceConfig[currentDevice];
+                newWindow.resizeTo(config.width + 100, 900);
+                
+                // 提示用户操作
+                showStatus('页面已打开，请点击视频卡片触发邀请码弹窗');
+            }, 1000);
+        }
+        
+        // 打开视频详情页
+        function openVideoDetail() {
+            const url = 'http://localhost:3000/video-detail.html';
+            const newWindow = window.open(url, '_blank');
+            
+            setTimeout(() => {
+                const config = deviceConfig[currentDevice];
+                newWindow.resizeTo(config.width + 100, 900);
+            }, 1000);
+            
+            showStatus('视频详情页已打开，请进行截图');
+        }
+        
+        // 打开测试页面
+        function openTestPage() {
+            const url = 'http://localhost:3000/invite-code-test.html';
+            const newWindow = window.open(url, '_blank');
+            
+            setTimeout(() => {
+                const config = deviceConfig[currentDevice];
+                newWindow.resizeTo(config.width + 100, 900);
+            }, 1000);
+            
+            showStatus('邀请码测试页已打开');
+        }
+        
+        // 打开调试页面
+        function openDebugPage() {
+            const url = 'http://localhost:3000/debug-errors.html';
+            const newWindow = window.open(url, '_blank');
+            
+            setTimeout(() => {
+                const config = deviceConfig[currentDevice];
+                newWindow.resizeTo(config.width + 100, 900);
+            }, 1000);
+            
+            showStatus('调试页面已打开');
+        }
+        
+        // 显示状态消息
+        function showStatus(message) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.style.display = 'block';
+            
+            setTimeout(() => {
+                status.style.display = 'none';
+            }, 3000);
+        }
+        
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            updateFilenames();
+            showStatus('UI截图助手已就绪，请选择设备类型开始截图');
+            
+            // 监听复选框变化
+            document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    const completed = document.querySelectorAll('input[type="checkbox"]:checked').length;
+                    const total = document.querySelectorAll('input[type="checkbox"]').length;
+                    
+                    if (completed === total) {
+                        showStatus('🎉 所有截图已完成！');
+                    } else {
+                        showStatus(`已完成 ${completed}/${total} 个截图`);
+                    }
+                });
+            });
+        });
+        
+        // 键盘快捷键
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey || e.metaKey) {
+                switch(e.key) {
+                    case '1':
+                        e.preventDefault();
+                        setDevice('desktop');
+                        break;
+                    case '2':
+                        e.preventDefault();
+                        setDevice('tablet');
+                        break;
+                    case '3':
+                        e.preventDefault();
+                        setDevice('mobile');
+                        break;
+                }
+            }
+        });
+    </script>
+</body>
+</html>

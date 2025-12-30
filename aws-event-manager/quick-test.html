@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AWS活动管理系统 - 快速测试</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .test-result {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .disabled {
+            background: #6c757d !important;
+            cursor: not-allowed !important;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .form-group {
+            margin: 15px 0;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 AWS活动管理系统 - 快速测试</h1>
+    
+    <div class="test-section">
+        <h2>🔍 1. 系统连接测试</h2>
+        <button onclick="testConnection()">测试服务器连接</button>
+        <div id="connectionResult"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>🔐 2. 管理员登录测试</h2>
+        <div class="form-group">
+            <label>用户名:</label>
+            <input type="text" id="username" value="admin">
+        </div>
+        <div class="form-group">
+            <label>密码:</label>
+            <input type="password" id="password" value="admin123">
+        </div>
+        <button onclick="testLogin()">测试登录</button>
+        <div id="loginResult"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>🎯 3. 活动创建测试</h2>
+        <div class="form-group">
+            <label>活动标题:</label>
+            <input type="text" id="eventTitle" value="测试活动 - AWS开发者聚会">
+        </div>
+        <div class="form-group">
+            <label>活动日期:</label>
+            <input type="date" id="eventDate" value="2024-12-15">
+        </div>
+        <div class="form-group">
+            <label>活动时间:</label>
+            <input type="time" id="eventTime" value="14:00">
+        </div>
+        <div class="form-group">
+            <label>活动地点:</label>
+            <input type="text" id="eventLocation" value="北京市朝阳区AWS办公室">
+        </div>
+        <div class="form-group">
+            <label>活动描述:</label>
+            <textarea id="eventDescription" rows="3">这是一个AWS开发者社区的技术分享活动，欢迎所有对云计算感兴趣的开发者参加。</textarea>
+        </div>
+        <button onclick="testCreateEvent()" id="createEventBtn" class="disabled" disabled>测试创建活动 (需要先登录)</button>
+        <div id="createEventResult"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>📝 4. 用户报名测试</h2>
+        <div class="form-group">
+            <label>姓名:</label>
+            <input type="text" id="regName" value="张三">
+        </div>
+        <div class="form-group">
+            <label>公司:</label>
+            <input type="text" id="regCompany" value="测试科技有限公司">
+        </div>
+        <div class="form-group">
+            <label>职位:</label>
+            <input type="text" id="regPosition" value="前端开发工程师">
+        </div>
+        <div class="form-group">
+            <label>手机号:</label>
+            <input type="tel" id="regPhone" value="13800138000">
+        </div>
+        <div class="form-group">
+            <label>邮箱:</label>
+            <input type="email" id="regEmail" value="zhangsan@test.com">
+        </div>
+        <button onclick="testRegistration()" id="registrationBtn" class="disabled" disabled>测试报名 (需要先创建活动)</button>
+        <div id="registrationResult"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>✅ 5. 签到功能测试</h2>
+        <button onclick="testCheckin()" id="checkinBtn" class="disabled" disabled>测试签到 (需要先报名)</button>
+        <div id="checkinResult"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>📊 6. 数据查询测试</h2>
+        <button onclick="testDataQuery()" id="queryBtn" class="disabled" disabled>测试数据查询 (需要先登录)</button>
+        <div id="queryResult"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>📋 测试结果汇总</h2>
+        <div id="summaryResult">
+            <div class="info">请按顺序执行上述测试，系统会自动记录测试结果。</div>
+        </div>
+    </div>
+
+    <script>
+        // 全局变量
+        let authToken = null;
+        let currentEventId = null;
+        let currentRegistrationId = null;
+        let testResults = {
+            connection: false,
+            login: false,
+            createEvent: false,
+            registration: false,
+            checkin: false,
+            dataQuery: false
+        };
+
+        // 显示结果的辅助函数
+        function showResult(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<div class="test-result ${type}">${message}</div>`;
+        }
+
+        // 更新按钮状态
+        function updateButtonStates() {
+            document.getElementById('createEventBtn').disabled = !testResults.login;
+            document.getElementById('createEventBtn').className = testResults.login ? '' : 'disabled';
+            
+            document.getElementById('registrationBtn').disabled = !testResults.createEvent;
+            document.getElementById('registrationBtn').className = testResults.createEvent ? '' : 'disabled';
+            
+            document.getElementById('checkinBtn').disabled = !testResults.registration;
+            document.getElementById('checkinBtn').className = testResults.registration ? '' : 'disabled';
+            
+            document.getElementById('queryBtn').disabled = !testResults.login;
+            document.getElementById('queryBtn').className = testResults.login ? '' : 'disabled';
+        }
+
+        // 更新测试汇总
+        function updateSummary() {
+            const total = Object.keys(testResults).length;
+            const passed = Object.values(testResults).filter(r => r).length;
+            const failed = total - passed;
+
+            let summaryHtml = `
+                <div class="info">
+                    <strong>测试进度:</strong> ${passed}/${total} 项通过
+                </div>
+            `;
+
+            if (passed === total) {
+                summaryHtml += `
+                    <div class="success">
+                        🎉 <strong>所有测试通过！</strong> 系统运行正常，可以正式使用。
+                    </div>
+                `;
+            } else if (failed > 0) {
+                summaryHtml += `
+                    <div class="error">
+                        ❌ <strong>发现 ${failed} 个问题</strong>，请检查相关功能。
+                    </div>
+                `;
+            }
+
+            document.getElementById('summaryResult').innerHTML = summaryHtml;
+        }
+
+        // 1. 测试服务器连接
+        async function testConnection() {
+            try {
+                showResult('connectionResult', '正在测试服务器连接...', 'info');
+                const response = await fetch('/api/events');
+                if (response.ok) {
+                    testResults.connection = true;
+                    showResult('connectionResult', '✅ 服务器连接正常！', 'success');
+                } else {
+                    testResults.connection = false;
+                    showResult('connectionResult', `❌ 服务器响应异常: ${response.status}`, 'error');
+                }
+            } catch (error) {
+                testResults.connection = false;
+                showResult('connectionResult', `❌ 连接失败: ${error.message}`, 'error');
+            }
+            updateSummary();
+        }
+
+        // 2. 测试管理员登录
+        async function testLogin() {
+            try {
+                showResult('loginResult', '正在测试登录...', 'info');
+                const username = document.getElementById('username').value;
+                const password = document.getElementById('password').value;
+
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const data = await response.json();
+                if (data.success && data.data.token) {
+                    authToken = data.data.token;
+                    testResults.login = true;
+                    showResult('loginResult', `✅ 登录成功！欢迎 ${data.data.user.username}`, 'success');
+                } else {
+                    testResults.login = false;
+                    showResult('loginResult', `❌ 登录失败: ${data.message || '未知错误'}`, 'error');
+                }
+            } catch (error) {
+                testResults.login = false;
+                showResult('loginResult', `❌ 登录请求失败: ${error.message}`, 'error');
+            }
+            updateButtonStates();
+            updateSummary();
+        }
+
+        // 3. 测试创建活动
+        async function testCreateEvent() {
+            if (!authToken) {
+                showResult('createEventResult', '❌ 请先登录', 'error');
+                return;
+            }
+
+            try {
+                showResult('createEventResult', '正在创建测试活动...', 'info');
+                const eventData = {
+                    title: document.getElementById('eventTitle').value,
+                    description: document.getElementById('eventDescription').value,
+                    event_date: document.getElementById('eventDate').value,
+                    event_time: document.getElementById('eventTime').value,
+                    location: document.getElementById('eventLocation').value,
+                    speaker_name: 'AWS技术专家',
+                    speaker_title: '云计算架构师',
+                    speaker_company: 'AWS',
+                    max_attendees: 50
+                };
+
+                const response = await fetch('/api/events', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify(eventData)
+                });
+
+                const data = await response.json();
+                if (data.success && data.data.id) {
+                    currentEventId = data.data.id;
+                    testResults.createEvent = true;
+                    showResult('createEventResult', `✅ 活动创建成功！活动ID: ${currentEventId}`, 'success');
+                } else {
+                    testResults.createEvent = false;
+                    showResult('createEventResult', `❌ 活动创建失败: ${data.message || '未知错误'}`, 'error');
+                }
+            } catch (error) {
+                testResults.createEvent = false;
+                showResult('createEventResult', `❌ 创建活动请求失败: ${error.message}`, 'error');
+            }
+            updateButtonStates();
+            updateSummary();
+        }
+
+        // 4. 测试用户报名
+        async function testRegistration() {
+            if (!currentEventId) {
+                showResult('registrationResult', '❌ 请先创建活动', 'error');
+                return;
+            }
+
+            try {
+                showResult('registrationResult', '正在测试用户报名...', 'info');
+                const registrationData = {
+                    name: document.getElementById('regName').value,
+                    company: document.getElementById('regCompany').value,
+                    position: document.getElementById('regPosition').value,
+                    phone: document.getElementById('regPhone').value,
+                    email: document.getElementById('regEmail').value,
+                    notes: '通过快速测试页面报名'
+                };
+
+                const response = await fetch(`/api/events/${currentEventId}/registrations`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(registrationData)
+                });
+
+                const data = await response.json();
+                if (data.success && data.data.id) {
+                    currentRegistrationId = data.data.id;
+                    testResults.registration = true;
+                    showResult('registrationResult', `✅ 报名成功！报名ID: ${currentRegistrationId}`, 'success');
+                } else {
+                    testResults.registration = false;
+                    showResult('registrationResult', `❌ 报名失败: ${data.message || '未知错误'}`, 'error');
+                }
+            } catch (error) {
+                testResults.registration = false;
+                showResult('registrationResult', `❌ 报名请求失败: ${error.message}`, 'error');
+            }
+            updateButtonStates();
+            updateSummary();
+        }
+
+        // 5. 测试签到功能
+        async function testCheckin() {
+            if (!currentRegistrationId || !authToken) {
+                showResult('checkinResult', '❌ 请先完成报名和登录', 'error');
+                return;
+            }
+
+            try {
+                showResult('checkinResult', '正在测试签到功能...', 'info');
+                const response = await fetch(`/api/registrations/${currentRegistrationId}/checkin`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({
+                        checked_by: 'admin'
+                    })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    testResults.checkin = true;
+                    showResult('checkinResult', '✅ 签到成功！', 'success');
+                } else {
+                    testResults.checkin = false;
+                    showResult('checkinResult', `❌ 签到失败: ${data.message || '未知错误'}`, 'error');
+                }
+            } catch (error) {
+                testResults.checkin = false;
+                showResult('checkinResult', `❌ 签到请求失败: ${error.message}`, 'error');
+            }
+            updateButtonStates();
+            updateSummary();
+        }
+
+        // 6. 测试数据查询
+        async function testDataQuery() {
+            if (!authToken || !currentEventId) {
+                showResult('queryResult', '❌ 请先登录并创建活动', 'error');
+                return;
+            }
+
+            try {
+                showResult('queryResult', '正在测试数据查询...', 'info');
+                
+                // 测试获取活动列表
+                const eventsResponse = await fetch('/api/events', {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+                const eventsData = await eventsResponse.json();
+
+                // 测试获取报名列表
+                const registrationsResponse = await fetch(`/api/events/${currentEventId}/registrations`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+                const registrationsData = await registrationsResponse.json();
+
+                // 测试获取签到统计
+                const statsResponse = await fetch(`/api/events/${currentEventId}/checkin-stats`);
+                const statsData = await statsResponse.json();
+
+                if (eventsData.success && registrationsData.success && statsData.success) {
+                    testResults.dataQuery = true;
+                    const eventCount = eventsData.data.length;
+                    const regCount = registrationsData.data.length;
+                    const checkinCount = statsData.data.checked_in_count;
+                    
+                    showResult('queryResult', 
+                        `✅ 数据查询成功！<br>
+                        - 活动数量: ${eventCount}<br>
+                        - 报名人数: ${regCount}<br>
+                        - 签到人数: ${checkinCount}`, 'success');
+                } else {
+                    testResults.dataQuery = false;
+                    showResult('queryResult', '❌ 数据查询失败', 'error');
+                }
+            } catch (error) {
+                testResults.dataQuery = false;
+                showResult('queryResult', `❌ 数据查询请求失败: ${error.message}`, 'error');
+            }
+            updateButtonStates();
+            updateSummary();
+        }
+
+        // 页面加载完成后自动测试连接
+        window.addEventListener('load', function() {
+            setTimeout(testConnection, 1000);
+        });
+    </script>
+</body>
+</html>

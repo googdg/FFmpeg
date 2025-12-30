@@ -346,7 +346,7 @@ const AudioQualityAnalyzer: React.FC<AudioQualityAnalyzerProps> = ({
       <div className="mt-4 p-3 bg-gray-50 rounded-lg">
         <h5 className="text-sm font-medium text-gray-700 mb-2">质量指标说明</h5>
         <div className="text-xs text-gray-600 space-y-1">
-          <p><strong>信噪比 (SNR):</strong> 信号与噪音的比值，越高越好 (>20dB 优秀)</p>
+          <p><strong>信噪比 (SNR):</strong> 信号与噪音的比值，越高越好 (&gt;20dB 优秀)</p>
           <p><strong>动态范围:</strong> 最大与最小音量差，适中范围有利于语音识别</p>
           <p><strong>峰值电平:</strong> 最大音量，应低于 -3dB 避免削波失真</p>
           <p><strong>RMS电平:</strong> 平均音量，-16 到 -25 dB 为理想范围</p>

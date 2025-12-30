@@ -1,3 +1,6 @@
+# GitHub Pages 部署模板
+# 复制此文件到 .github/workflows/deploy.yml
+
 name: Deploy to GitHub Pages
 
 on:
@@ -26,27 +29,24 @@ jobs:
         with:
           node-version: '18'
           cache: 'npm'
-          cache-dependency-path: client/package-lock.json
+          # 根据项目结构调整路径
+          cache-dependency-path: package-lock.json  # 或 client/package-lock.json
           
       - name: Setup Pages
         uses: actions/configure-pages@v4
         
       - name: Install dependencies
-        run: |
-          cd client
-          npm ci
-          
-      - name: Build with GitHub Pages base path
-        run: |
-          cd client
-          npm run build
+        run: npm ci  # 或 cd client && npm ci
+        
+      - name: Build
+        run: npm run build  # 或 cd client && npm run build
         env:
           NODE_ENV: production
           
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./client/dist
+          path: ./dist  # 或 ./client/dist，根据构建输出目录调整
 
   deploy:
     environment:
@@ -58,3 +58,13 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
+# 配置说明:
+# 1. 将此文件复制到 .github/workflows/deploy.yml
+# 2. 根据项目结构调整路径:
+#    - cache-dependency-path: package-lock.json 的位置
+#    - Install dependencies: 安装命令
+#    - Build: 构建命令
+#    - Upload artifact path: 构建输出目录
+# 3. 确保package.json中有build脚本
+# 4. 在GitHub仓库设置中启用Pages，选择GitHub Actions作为源

@@ -1,0 +1,103 @@
+/* 打印专用样式 */
+@media print {
+    /* 隐藏不需要打印的元素 */
+    .toolbar,
+    .loading-overlay {
+        display: none !important;
+    }
+    
+    /* 重置页面样式 */
+    body {
+        background: white;
+        margin: 0;
+        padding: 0;
+    }
+    
+    /* 报告容器 */
+    .report-container {
+        max-width: 100%;
+        margin: 0;
+        padding: 20mm;
+        box-shadow: none;
+    }
+    
+    /* 页面设置 */
+    @page {
+        size: A4;
+        margin: 15mm;
+    }
+    
+    /* 避免分页 */
+    .report-section {
+        page-break-inside: avoid;
+        break-inside: avoid;
+    }
+    
+    .report-header {
+        page-break-after: avoid;
+        break-after: avoid;
+    }
+    
+    /* 优化打印颜色 */
+    .risk-score {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+    
+    .rag-item,
+    .recommendation-item,
+    .question-item,
+    .alert-group,
+    .approval-item {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+    
+    /* 调整字体大小 */
+    body {
+        font-size: 11pt;
+    }
+    
+    .section-title {
+        font-size: 14pt;
+    }
+    
+    /* 优化间距 */
+    .report-section {
+        margin-bottom: 15px;
+        padding: 12px;
+    }
+    
+    /* 隐藏交互元素 */
+    .toggle-icon,
+    .question-count {
+        display: none;
+    }
+    
+    /* 展开所有可折叠内容 */
+    .questions-list {
+        display: flex !important;
+    }
+    
+    /* 优化图表 */
+    .risk-radar {
+        height: 200px;
+    }
+    
+    /* 确保链接可见 */
+    a[href]:after {
+        content: " (" attr(href) ")";
+        font-size: 9pt;
+        color: #666;
+    }
+    
+    /* 页脚固定在底部 */
+    .report-footer {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding: 10px 20mm;
+        border-top: 1px solid #ccc;
+    }
+}

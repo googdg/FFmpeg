@@ -1,0 +1,193 @@
+# Git 全局配置文件
+# 使用方法: 复制到 ~/.gitconfig 或使用 git config --global 命令设置
+
+[user]
+    # 请替换为您的信息
+    name = Your Name
+    email = your.email@example.com
+
+[core]
+    # 默认编辑器
+    editor = code --wait
+    
+    # 自动转换行结束符
+    autocrlf = input
+    
+    # 忽略文件权限变化
+    filemode = false
+    
+    # 处理文件名大小写
+    ignorecase = false
+
+[init]
+    # 默认分支名
+    defaultBranch = main
+
+[pull]
+    # 拉取时的合并策略
+    rebase = false
+
+[push]
+    # 推送策略
+    default = simple
+    
+    # 自动设置上游分支
+    autoSetupRemote = true
+
+[merge]
+    # 合并工具
+    tool = vscode
+    
+    # 禁用快进合并的提交信息
+    ff = false
+
+[mergetool "vscode"]
+    cmd = code --wait $MERGED
+
+[diff]
+    # 差异工具
+    tool = vscode
+
+[difftool "vscode"]
+    cmd = code --wait --diff $LOCAL $REMOTE
+
+[alias]
+    # 状态相关
+    st = status
+    s = status --short
+    
+    # 添加相关
+    a = add
+    aa = add .
+    ap = add -p
+    
+    # 提交相关
+    c = commit
+    cm = commit -m
+    ca = commit -a
+    cam = commit -am
+    amend = commit --amend
+    
+    # 分支相关
+    b = branch
+    ba = branch -a
+    bd = branch -d
+    bD = branch -D
+    
+    # 检出相关
+    co = checkout
+    cob = checkout -b
+    com = checkout main
+    cod = checkout develop
+    
+    # 远程相关
+    f = fetch
+    p = push
+    pl = pull
+    pom = push origin main
+    pod = push origin develop
+    
+    # 日志相关
+    l = log --oneline
+    lg = log --oneline --graph --decorate
+    lga = log --oneline --graph --decorate --all
+    ll = log --pretty=format:'%C(yellow)%h%Creset -%C(red)%d%Creset %s %C(green)(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit
+    
+    # 差异相关
+    d = diff
+    dc = diff --cached
+    ds = diff --stat
+    
+    # 重置相关
+    unstage = reset HEAD --
+    undo = reset --soft HEAD~1
+    hard-reset = reset --hard HEAD
+    
+    # 储藏相关
+    save = stash save
+    pop = stash pop
+    list = stash list
+    
+    # 远程相关
+    remotes = remote -v
+    
+    # 标签相关
+    tags = tag -l
+    
+    # 清理相关
+    cleanup = "!git branch --merged | grep -v '\\*\\|main\\|develop' | xargs -n 1 git branch -d"
+    
+    # 快速操作
+    ac = "!git add . && git commit -m"
+    acp = "!git add . && git commit -m \"$1\" && git push"
+    
+    # 查看配置
+    aliases = config --get-regexp alias
+    
+    # 美化日志
+    tree = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --all
+    
+    # 统计信息
+    stats = shortlog -sn
+    
+    # 查找提交
+    find = "!git log --pretty=format:'%C(yellow)%h  %C(reset)%ad  %C(green)%s' --date=short --grep"
+    
+    # 撤销最后一次提交但保留更改
+    uncommit = reset --soft HEAD~1
+    
+    # 查看文件历史
+    filelog = log -u
+    
+    # 快速切换到上一个分支
+    back = checkout -
+
+[color]
+    # 启用颜色输出
+    ui = auto
+    branch = auto
+    diff = auto
+    status = auto
+
+[color "branch"]
+    current = yellow reverse
+    local = yellow
+    remote = green
+
+[color "diff"]
+    meta = yellow bold
+    frag = magenta bold
+    old = red bold
+    new = green bold
+
+[color "status"]
+    added = yellow
+    changed = green
+    untracked = cyan
+
+[help]
+    # 自动纠正命令
+    autocorrect = 1
+
+[rerere]
+    # 记住解决冲突的方法
+    enabled = true
+
+[credential]
+    # 凭据助手 (macOS)
+    helper = osxkeychain
+
+[filter "lfs"]
+    # Git LFS 配置
+    clean = git-lfs clean -- %f
+    smudge = git-lfs smudge -- %f
+    process = git-lfs filter-process
+    required = true
+
+[includeIf "gitdir:~/work/"]
+    # 工作目录特殊配置
+    path = ~/.gitconfig-work
+
+[includeIf "gitdir:~/personal/"]
+    # 个人项目特殊配置
+    path = ~/.gitconfig-personal

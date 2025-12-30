@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>调试页面 - VW信审报告</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .debug-info {
+            background: white;
+            padding: 20px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border-left: 4px solid #001e50;
+        }
+        .success { color: #00c853; }
+        .error { color: #f44336; }
+        .warning { color: #ff9800; }
+    </style>
+</head>
+<body>
+    <h1>🔍 系统调试信息</h1>
+    
+    <div class="debug-info">
+        <h3>1. 服务器状态</h3>
+        <p class="success">✅ 服务器运行正常 (你能看到这个页面)</p>
+    </div>
+    
+    <div class="debug-info">
+        <h3>2. 文件检查</h3>
+        <p id="css-check">检查CSS文件...</p>
+        <p id="js-check">检查JS文件...</p>
+    </div>
+    
+    <div class="debug-info">
+        <h3>3. CDN资源检查</h3>
+        <p id="vue-check">检查Vue.js...</p>
+        <p id="echarts-check">检查ECharts...</p>
+    </div>
+    
+    <div class="debug-info">
+        <h3>4. 数据检查</h3>
+        <p id="data-check">检查模拟数据...</p>
+    </div>
+    
+    <div class="debug-info">
+        <h3>5. 操作</h3>
+        <button onclick="location.href='index.html'" style="padding: 10px 20px; background: #001e50; color: white; border: none; border-radius: 5px; cursor: pointer;">
+            尝试打开主页面
+        </button>
+    </div>
+    
+    <!-- 加载CSS -->
+    <link rel="stylesheet" href="css/main.css" onload="document.getElementById('css-check').innerHTML='✅ CSS文件加载成功'" onerror="document.getElementById('css-check').innerHTML='❌ CSS文件加载失败'" onerror="document.getElementById('css-check').className='error'">
+    
+    <!-- 加载Vue.js -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js" onload="document.getElementById('vue-check').innerHTML='✅ Vue.js加载成功'; document.getElementById('vue-check').className='success';" onerror="document.getElementById('vue-check').innerHTML='❌ Vue.js加载失败'; document.getElementById('vue-check').className='error';"></script>
+    
+    <!-- 加载ECharts -->
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js" onload="document.getElementById('echarts-check').innerHTML='✅ ECharts加载成功'; document.getElementById('echarts-check').className='success';" onerror="document.getElementById('echarts-check').innerHTML='❌ ECharts加载失败'; document.getElementById('echarts-check').className='error';"></script>
+    
+    <!-- 加载数据文件 -->
+    <script src="js/data.js" onload="if(window.mockCases){document.getElementById('data-check').innerHTML='✅ 数据文件加载成功，包含'+Object.keys(window.mockCases).length+'个案例'; document.getElementById('data-check').className='success';} else {document.getElementById('data-check').innerHTML='❌ 数据文件加载但数据不可用'; document.getElementById('data-check').className='error';}" onerror="document.getElementById('data-check').innerHTML='❌ 数据文件加载失败'; document.getElementById('data-check').className='error';"></script>
+    
+    <script>
+        // 检查JS文件
+        fetch('js/app.js')
+            .then(response => {
+                if(response.ok) {
+                    document.getElementById('js-check').innerHTML = '✅ JS文件可访问';
+                    document.getElementById('js-check').className = 'success';
+                } else {
+                    document.getElementById('js-check').innerHTML = '❌ JS文件无法访问';
+                    document.getElementById('js-check').className = 'error';
+                }
+            })
+            .catch(err => {
+                document.getElementById('js-check').innerHTML = '❌ JS文件加载错误: ' + err.message;
+                document.getElementById('js-check').className = 'error';
+            });
+    </script>
+</body>
+</html>

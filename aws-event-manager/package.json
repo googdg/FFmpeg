@@ -1,0 +1,35 @@
+{
+  "name": "aws-event-manager",
+  "version": "1.0.0",
+  "description": "AWS开发者社区活动管理系统",
+  "main": "server.js",
+  "scripts": {
+    "dev": "nodemon server.js",
+    "start": "node server.js",
+    "start:production": "NODE_ENV=production PORT=80 node server.js",
+    "test": "jest",
+    "pm2:start": "pm2 start ecosystem.config.js",
+    "pm2:restart": "pm2 restart aws-event-manager"
+  },
+  "keywords": ["aws", "event", "management", "community", "h5"],
+  "author": "Stevn",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "sqlite3": "^5.1.6",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^1.4.5-lts.1",
+    "helmet": "^7.1.0",
+    "cors": "^2.8.5",
+    "express-rate-limit": "^7.1.5",
+    "express-session": "^1.17.3",
+    "marked": "^9.1.6",
+    "dompurify": "^3.0.5",
+    "jimp": "^0.22.10"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1",
+    "jest": "^29.7.0"
+  }
+}
