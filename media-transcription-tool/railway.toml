@@ -1,0 +1,19 @@
+[build]
+builder = "dockerfile"
+
+[deploy]
+healthcheckPath = "/api/health"
+healthcheckTimeout = 300
+restartPolicyType = "on_failure"
+
+[services.web]
+buildCommand = "npm run build"
+startCommand = "npm start"
+variables = { NODE_ENV = "production" }
+
+[services.redis]
+image = "redis:7-alpine"
+
+[services.postgres]
+image = "postgres:15-alpine"
+variables = { POSTGRES_DB = "transcription", POSTGRES_USER = "user", POSTGRES_PASSWORD = "password" }

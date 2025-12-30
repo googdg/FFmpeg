@@ -1,0 +1,35 @@
+services:
+  - type: web
+    name: media-transcription-tool
+    env: node
+    plan: free
+    buildCommand: |
+      cd client && npm install && npm run build &&
+      cd ../server && npm install && npm run build
+    startCommand: cd server && npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: DATABASE_URL
+        fromDatabase:
+          name: transcription-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: transcription-redis
+          property: connectionString
+
+  - type: redis
+    name: transcription-redis
+    plan: free
+    maxmemoryPolicy: allkeys-lru
+
+databases:
+  - name: transcription-db
+    databaseName: transcription
+    user: transcription_user
+    plan: free

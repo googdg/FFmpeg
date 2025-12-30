@@ -1,0 +1,64 @@
+# 多阶段构建 - 生产环境优化
+FROM node:18-alpine AS base
+
+# 安装系统依赖
+RUN apk add --no-cache \
+    ffmpeg \
+    python3 \
+    make \
+    g++ \
+    && rm -rf /var/cache/apk/*
+
+WORKDIR /app
+
+# 复制package文件
+COPY package*.json ./
+COPY client/package*.json ./client/
+COPY server/package*.json ./server/
+
+# 构建阶段 - 前端
+FROM base AS frontend-builder
+WORKDIR /app/client
+COPY client/ .
+RUN npm ci --only=production && npm run build
+
+# 构建阶段 - 后端
+FROM base AS backend-builder
+WORKDIR /app/server
+COPY server/ .
+RUN npm ci --only=production && npm run build
+
+# 生产阶段
+FROM node:18-alpine AS production
+
+# 安装运行时依赖
+RUN apk add --no-cache \
+    ffmpeg \
+    python3 \
+    && rm -rf /var/cache/apk/*
+
+WORKDIR /app
+
+# 创建非root用户
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nextjs -u 1001
+
+# 复制构建产物
+COPY --from=frontend-builder /app/client/dist ./client/dist
+COPY --from=backend-builder /app/server/dist ./server/dist
+COPY --from=backend-builder /app/server/node_modules ./server/node_modules
+COPY --from=backend-builder /app/server/package.json ./server/
+
+# 创建必要目录
+RUN mkdir -p uploads transcriptions && \
+    chown -R nextjs:nodejs /app
+
+USER nextjs
+
+EXPOSE 3000
+
+# 健康检查
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:3000/api/health || exit 1
+
+CMD ["node", "server/dist/index.js"]
