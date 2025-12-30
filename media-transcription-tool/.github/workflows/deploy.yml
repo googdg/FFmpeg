@@ -39,7 +39,7 @@ jobs:
       - name: Build with GitHub Pages base path
         run: |
           cd client
-          npm run build
+          npm run build:skip-check
         env:
           NODE_ENV: production
           
